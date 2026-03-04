@@ -35,14 +35,5 @@ return [
         ],
     ],
 
-    'newsapi' => [
-        'key' => env('NEWS_API_KEY'),
-        'url' => 'https://newsapi.org/v2',
-    ],
-
-    'linkedin_jobs' => [
-        'key' => env('LINKEDIN_JOBS_API_KEY'),
-        'url' => env('LINKEDIN_JOBS_API_URL', 'https://linkedin-jobs-api.p.rapidapi.com'),
-    ],
 
 ];

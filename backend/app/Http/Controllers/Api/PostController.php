@@ -47,6 +47,14 @@ class PostController extends Controller
     }
 
     /**
+     * Search posts by keyword or tag.
+     */
+    public function search()
+    {
+        // TODO: Implement post search (keyword/tag)
+    }
+
+    /**
      * Get posts for the authenticated user.
      */
     public function myPosts()
