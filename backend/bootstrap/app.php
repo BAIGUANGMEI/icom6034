@@ -16,9 +16,6 @@ return Application::configure(basePath: dirname(__DIR__))
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
 
-        $middleware->alias([
-            'auth' => \App\Http\Middleware\Authenticate::class,
-        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
