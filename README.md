@@ -10,13 +10,14 @@ A web-based platform where job seekers can share interview experiences, job offe
 | Backend  | Laravel 12 (PHP 8.2+)               |
 | Database | MySQL 8.0+                          |
 | Auth     | Laravel Sanctum (Token-based)       |
+| API Docs | Swagger UI (l5-swagger / OpenAPI 3) |
 | State    | Pinia                               |
 | HTTP     | Axios                               |
 | Router   | Vue Router 4                        |
 
-## External APIs
+## External APIs (called directly from frontend)
 
-- **LinkedIn Jobs API** — Real-time job listings search
+- **LinkedIn Jobs API** — Real-time job listings search (via RapidAPI)
 - **News API** (https://newsapi.org/) — Job market news and industry trends
 
 ## Prerequisites
@@ -34,14 +35,13 @@ Make sure the following tools are installed on your machine:
 ## Project Structure
 
 ```
-icom6034/
+|
 ├── backend/                    # Laravel API Server
 │   ├── app/
 │   │   ├── Http/Controllers/Api/   # API Controllers
 │   │   ├── Http/Requests/Api/      # Form Validation
 │   │   ├── Http/Resources/         # API Resource Formatting
-│   │   ├── Models/                 # Eloquent Models
-│   │   └── Services/               # External API Services
+│   │   └── Models/                 # Eloquent Models
 │   ├── database/migrations/        # Database Migrations
 │   ├── routes/api.php              # API Route Definitions
 │   └── .env.example                # Environment Config Template
@@ -101,10 +101,6 @@ DB_USERNAME=root
 DB_PASSWORD=your_password
 
 FRONTEND_URL=http://localhost:5173
-
-# External API Keys (obtain from respective providers)
-NEWS_API_KEY=your_news_api_key
-LINKEDIN_JOBS_API_KEY=your_linkedin_api_key
 ```
 
 Run database migrations:
@@ -131,10 +127,15 @@ cd frontend
 npm install
 ```
 
-(Optional) Create `frontend/.env` if you need to override the API URL:
+Configure `frontend/.env` with API keys:
 
 ```dotenv
 VITE_API_BASE_URL=http://localhost:8000/api
+
+# External API Keys (called directly from frontend)
+VITE_NEWS_API_KEY=your_news_api_key
+VITE_LINKEDIN_JOBS_API_KEY=your_linkedin_api_key
+VITE_LINKEDIN_JOBS_API_URL=https://linkedin-jobs-api.p.rapidapi.com
 ```
 
 Start the development server:
@@ -147,11 +148,12 @@ npm run dev
 ### 5. Verify Setup
 
 - Backend API: Open http://localhost:8000/api/posts — should return a JSON response.
+- API Documentation: Open http://localhost:8000/api/documentation — Swagger UI with all endpoints.
 - Frontend App: Open http://localhost:5173 — should display the homepage.
 
 ## API Endpoints
 
-### Public Routes
+### Public Routes (Backend API)
 
 | Method | Endpoint                       | Description                 |
 | ------ | ------------------------------ | --------------------------- |
@@ -162,10 +164,15 @@ npm run dev
 | GET    | `/api/tags`                    | List all tags               |
 | GET    | `/api/tags/{id}`               | Get tag with related posts  |
 | GET    | `/api/search/posts`            | Search posts                |
-| GET    | `/api/search/jobs`             | Search jobs (LinkedIn API)  |
-| GET    | `/api/news`                    | Get headline news           |
-| GET    | `/api/news/search`             | Search news                 |
 | GET    | `/api/posts/{postId}/comments` | Get comments for a post     |
+
+### External APIs (called from frontend)
+
+| Service           | Endpoint                                  | Description                 |
+| ----------------- | ----------------------------------------- | --------------------------- |
+| LinkedIn Jobs API | `https://linkedin-jobs-api.p.rapidapi.com`| Search job listings          |
+| News API          | `https://newsapi.org/v2/top-headlines`    | Get headline news            |
+| News API          | `https://newsapi.org/v2/everything`       | Search news articles         |
 
 ### Protected Routes (require Bearer Token)
 
@@ -185,11 +192,12 @@ npm run dev
 ### Backend
 
 ```bash
-php artisan serve          # Start development server
-php artisan migrate        # Run database migrations
-php artisan migrate:fresh  # Reset and re-run all migrations
-php artisan route:list     # List all registered routes
-php artisan tinker         # Interactive REPL
+php artisan serve              # Start development server
+php artisan migrate            # Run database migrations
+php artisan migrate:fresh      # Reset and re-run all migrations
+php artisan route:list         # List all registered routes
+php artisan l5-swagger:generate  # Regenerate Swagger/OpenAPI docs
+php artisan tinker             # Interactive REPL
 ```
 
 ### Frontend
