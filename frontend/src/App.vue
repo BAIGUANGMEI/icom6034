@@ -7,12 +7,17 @@ import AppFooter from './components/layout/AppFooter.vue'
   <div id="app">
     <AppHeader />
     <main class="app-main">
-      <router-view />
+      <div class="container">
+        <router-view />
+      </div>
     </main>
     <AppFooter />
   </div>
 </template>
 
 <style scoped>
-/* TODO: Add global layout styles */
+.app-main {
+  flex: 1;
+  padding: var(--space-xl) 0;
+}
 </style>
