@@ -165,6 +165,8 @@ npm run dev
 | GET    | `/api/tags/{id}`               | Get tag with related posts  |
 | GET    | `/api/search/posts`            | Search posts                |
 | GET    | `/api/posts/{postId}/comments` | Get comments for a post     |
+| GET    | `/api/users/{id}/profile`      | Get user profile with stats |
+| GET    | `/api/users/{id}/posts`        | Get posts by a user         |
 
 ### External APIs (called from frontend)
 
@@ -180,6 +182,7 @@ npm run dev
 | ------ | --------------------------------------- | ------------------------- |
 | POST   | `/api/logout`                           | Logout                    |
 | GET    | `/api/user`                             | Get current user info     |
+| PUT    | `/api/user/profile`                     | Update user profile       |
 | POST   | `/api/posts`                            | Create a new post         |
 | PUT    | `/api/posts/{id}`                       | Update a post             |
 | DELETE | `/api/posts/{id}`                       | Delete a post             |

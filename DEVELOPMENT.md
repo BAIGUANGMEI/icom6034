@@ -141,7 +141,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 ```
 
-**当前已注册的路由（共 16 条）：**
+**当前已注册的路由（共 19 条）：**
 
 | 分类 | 方法 | 路径 | Controller@method |
 |------|------|------|-------------------|
@@ -149,6 +149,9 @@ Route::middleware('auth:sanctum')->group(function () {
 | Auth | POST | `/api/login` | `AuthController@login` |
 | Auth🔒 | POST | `/api/logout` | `AuthController@logout` |
 | Auth🔒 | GET | `/api/user` | `AuthController@user` |
+| Auth🔒 | PUT | `/api/user/profile` | `AuthController@updateProfile` |
+| Profile | GET | `/api/users/{id}/profile` | `AuthController@profile` |
+| Profile | GET | `/api/users/{id}/posts` | `PostController@userPosts` |
 | Posts | GET | `/api/posts` | `PostController@index` |
 | Posts | GET | `/api/posts/{id}` | `PostController@show` |
 | Posts | GET | `/api/search/posts` | `PostController@search` |
@@ -181,6 +184,19 @@ User ──1:N──► Post ──N:M──► Tag
 | `Comment` | belongsTo(Post), belongsTo(User) | id, post_id, user_id, content |
 
 **中间表：** `post_tag` (post_id, tag_id)
+
+**数据库表清单（共 6 张）：**
+
+| 表名 | 用途 |
+|------|------|
+| `users` | 用户（id, name, email, password, timestamps） |
+| `posts` | 帖子 |
+| `tags` | 标签 |
+| `post_tag` | 帖子-标签多对多中间表 |
+| `comments` | 评论 |
+| `personal_access_tokens` | Sanctum API Token |
+| `sessions` | 会话（Laravel 系统表） |
+| `migrations` | 迁移记录（Laravel 系统表） |
 
 ### 2.6 Resource 输出格式
 
@@ -233,7 +249,7 @@ User ──1:N──► Post ──N:M──► Tag
 frontend/src/
 ├── api/                    # API 请求层（每个资源一个文件）
 │   ├── index.js            # Axios 实例 + 拦截器 (不要修改)
-│   ├── auth.js             # authApi: register, login, logout, getUser
+│   ├── auth.js             # authApi: register, login, logout, getUser, getProfile, getUserPosts
 │   ├── posts.js            # postApi: getAll, getOne, create, update, delete, getMyPosts
 │   ├── comments.js         # commentApi: getByPost, create, delete
 │   ├── tags.js             # tagApi: getAll, getOne
@@ -250,14 +266,16 @@ frontend/src/
 ├── views/                  # 页面组件（按功能分目录）
 │   ├── HomeView.vue
 │   ├── auth/
-│   │   ├── LoginView.vue
-│   │   └── RegisterView.vue
+│   │   ├── LoginView.vue       # 登录页（含输入验证、密码可见切换）
+│   │   └── RegisterView.vue    # 注册页（含密码强度指示器、成功动画）
 │   ├── posts/
 │   │   ├── PostListView.vue
 │   │   ├── PostDetailView.vue
 │   │   ├── PostCreateView.vue
 │   │   ├── PostEditView.vue
 │   │   └── MyPostsView.vue
+│   ├── profile/
+│   │   └── ProfileView.vue     # 用户主页（头像、统计、帖子列表、编辑资料弹窗）
 │   ├── search/
 │   │   └── SearchView.vue
 │   └── news/
