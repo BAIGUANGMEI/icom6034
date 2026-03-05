@@ -16,4 +16,12 @@ export const authApi = {
   getUser() {
     return api.get('/user')
   },
+
+  getProfile(id) {
+    return api.get(`/users/${id}/profile`)
+  },
+
+  getUserPosts(id) {
+    return api.get(`/users/${id}/posts`)
+  },
 }

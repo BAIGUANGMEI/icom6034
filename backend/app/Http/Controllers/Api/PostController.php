@@ -211,4 +211,40 @@ class PostController extends Controller
     {
         // TODO: Implement get user's own posts
     }
+
+    /**
+     * Get posts by a specific user.
+     */
+    #[OA\Get(
+        path: '/api/users/{id}/posts',
+        summary: 'Get all posts by a specific user',
+        tags: ['Posts'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'List of user posts',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'data', type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/Post')
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 404, description: 'User not found'),
+        ]
+    )]
+    public function userPosts(int $id)
+    {
+        $user = \App\Models\User::findOrFail($id);
+
+        $posts = \App\Models\Post::where('user_id', $user->id)
+            ->with(['user', 'tags'])
+            ->withCount('comments')
+            ->latest()
+            ->paginate(15);
+
+        return \App\Http\Resources\PostResource::collection($posts);
+    }
 }

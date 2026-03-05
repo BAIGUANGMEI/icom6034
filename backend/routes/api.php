@@ -28,6 +28,10 @@ Route::get('/tags/{id}', [TagController::class, 'show']);
 // Public post search
 Route::get('/search/posts', [PostController::class, 'search']);
 
+// Public user profile
+Route::get('/users/{id}/profile', [AuthController::class, 'profile']);
+Route::get('/users/{id}/posts', [PostController::class, 'userPosts']);
+
 // Public comments
 Route::get('/posts/{postId}/comments', [CommentController::class, 'index']);
 
@@ -40,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    Route::put('/user/profile', [AuthController::class, 'updateProfile']);
 
     // Post CRUD
     Route::post('/posts', [PostController::class, 'store']);

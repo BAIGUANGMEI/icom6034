@@ -51,6 +51,10 @@
                 </div>
               </div>
               <div class="dropdown-divider"></div>
+              <router-link :to="{ name: 'Profile', params: { id: authStore.user?.id } }" class="dropdown-item" @click.stop="menuOpen = false">
+                <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Z"/></svg>
+                My Profile
+              </router-link>
               <router-link to="/my-posts" class="dropdown-item" @click.stop="menuOpen = false">
                 <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm4 18H6V4h7v5h5v11Z"/></svg>
                 My Posts
@@ -84,6 +88,7 @@
         <router-link to="/news" class="mobile-link" @click="mobileOpen = false">News</router-link>
         <template v-if="authStore.isAuthenticated">
           <router-link to="/posts/create" class="mobile-link" @click="mobileOpen = false">New Post</router-link>
+          <router-link :to="{ name: 'Profile', params: { id: authStore.user?.id } }" class="mobile-link" @click="mobileOpen = false">My Profile</router-link>
           <router-link to="/my-posts" class="mobile-link" @click="mobileOpen = false">My Posts</router-link>
           <button class="mobile-link logout-link" @click="handleLogout">Log out</button>
         </template>

@@ -175,4 +175,102 @@ class AuthController extends Controller
     {
         return new UserResource($request->user());
     }
+
+    /**
+     * Update authenticated user profile.
+     */
+    #[OA\Put(
+        path: '/api/user/profile',
+        summary: 'Update current user profile (name and email)',
+        tags: ['Auth'],
+        security: [['sanctum' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', example: 'Jane Doe'),
+                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'jane@example.com'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Profile updated successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'data', type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer'),
+                                new OA\Property(property: 'name', type: 'string'),
+                                new OA\Property(property: 'email', type: 'string'),
+                                new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 422, description: 'Validation error'),
+        ]
+    )]
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+        ]);
+
+        $user->update($validated);
+
+        return response()->json([
+            'data' => new UserResource($user),
+        ]);
+    }
+
+    /**
+     * Get user profile with statistics.
+     */
+    #[OA\Get(
+        path: '/api/users/{id}/profile',
+        summary: 'Get user public profile with post and comment counts',
+        tags: ['Auth'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'User profile data',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'data', type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer'),
+                                new OA\Property(property: 'name', type: 'string'),
+                                new OA\Property(property: 'email', type: 'string'),
+                                new OA\Property(property: 'posts_count', type: 'integer'),
+                                new OA\Property(property: 'comments_count', type: 'integer'),
+                                new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 404, description: 'User not found'),
+        ]
+    )]
+    public function profile(int $id)
+    {
+        $user = User::withCount(['posts', 'comments'])->findOrFail($id);
+
+        return response()->json([
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'posts_count' => $user->posts_count,
+                'comments_count' => $user->comments_count,
+                'created_at' => $user->created_at,
+            ],
+        ]);
+    }
 }
