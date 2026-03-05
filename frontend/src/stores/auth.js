@@ -9,19 +9,42 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value)
 
   async function register(data) {
-    // TODO: Implement register action
+    const { data: res } = await authApi.register(data)
+    token.value = res.token
+    user.value = res.user
+    localStorage.setItem('token', res.token)
+    return res
   }
 
   async function login(data) {
-    // TODO: Implement login action
+    const { data: res } = await authApi.login(data)
+    token.value = res.token
+    user.value = res.user
+    localStorage.setItem('token', res.token)
+    return res
   }
 
   async function logout() {
-    // TODO: Implement logout action
+    try {
+      await authApi.logout()
+    } catch (error) {
+      console.error('Logout API error:', error)
+    } finally {
+      token.value = null
+      user.value = null
+      localStorage.removeItem('token')
+    }
   }
 
   async function fetchUser() {
-    // TODO: Implement fetch user action
+    try {
+      const { data } = await authApi.getUser()
+      user.value = data.data
+    } catch (error) {
+      token.value = null
+      user.value = null
+      localStorage.removeItem('token')
+    }
   }
 
   return {

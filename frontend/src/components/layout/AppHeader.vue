@@ -98,8 +98,10 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
+const router = useRouter()
 const authStore = useAuthStore()
 
 const menuOpen = ref(false)
@@ -123,7 +125,8 @@ function handleClickOutside(e) {
 async function handleLogout() {
   menuOpen.value = false
   mobileOpen.value = false
-  // TODO: Implement logout
+  await authStore.logout()
+  router.push({ name: 'Login' })
 }
 
 onMounted(() => document.addEventListener('click', handleClickOutside))
