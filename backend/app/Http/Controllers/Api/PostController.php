@@ -3,12 +3,24 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\StorePostRequest;
+use App\Http\Requests\Api\UpdatePostRequest;
+use App\Http\Requests\Api\UploadPostImageRequest;
+use App\Http\Resources\PostResource;
+use App\Models\Post;
+use App\Models\Tag;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use OpenApi\Attributes as OA;
 
+/**
+ * API controller for posts: CRUD, search, and image upload.
+ * Content supports rich text (HTML); images are stored locally via uploadImage().
+ */
 class PostController extends Controller
 {
     /**
-     * Display a listing of posts.
+     * List all posts with pagination. Eager-loads user and tags to avoid N+1.
      */
     #[OA\Get(
         path: '/api/posts',
@@ -30,13 +42,18 @@ class PostController extends Controller
             ),
         ]
     )]
-    public function index()
+    public function index(Request $request)
     {
-        // TODO: Implement list all posts
+        $posts = Post::with(['user', 'tags'])
+            ->withCount('comments')
+            ->latest()
+            ->paginate($request->get('per_page', 15));
+
+        return PostResource::collection($posts);
     }
 
     /**
-     * Store a newly created post.
+     * Create a new post (auth required). Syncs tags by name (firstOrCreate).
      */
     #[OA\Post(
         path: '/api/posts',
@@ -65,13 +82,29 @@ class PostController extends Controller
             new OA\Response(response: 422, description: 'Validation error'),
         ]
     )]
-    public function store()
+    public function store(StorePostRequest $request)
     {
-        // TODO: Implement create post
+        // Create post for authenticated user; content may be HTML from rich text editor
+        $post = $request->user()->posts()->create([
+            'title' => $request->title,
+            'content' => $request->validated('content'),
+        ]);
+
+        // Resolve tag names to IDs (create tag if not exists), then sync
+        $tagIds = collect($request->tags)->map(function ($tagName) {
+            return Tag::firstOrCreate(['name' => strtolower(trim($tagName))])->id;
+        });
+        $post->tags()->sync($tagIds);
+
+        $post->load(['user', 'tags']);
+
+        return (new PostResource($post))
+            ->response()
+            ->setStatusCode(201);
     }
 
     /**
-     * Display the specified post.
+     * Return a single post by ID with user, tags, and comment count.
      */
     #[OA\Get(
         path: '/api/posts/{id}',
@@ -89,7 +122,11 @@ class PostController extends Controller
     )]
     public function show(string $id)
     {
-        // TODO: Implement show single post
+        $post = Post::with(['user', 'tags'])
+            ->withCount('comments')
+            ->findOrFail($id);
+
+        return new PostResource($post);
     }
 
     /**
@@ -123,13 +160,38 @@ class PostController extends Controller
             new OA\Response(response: 422, description: 'Validation error'),
         ]
     )]
-    public function update(string $id)
+    public function update(UpdatePostRequest $request, string $id)
     {
-        // TODO: Implement update post
+        $post = Post::findOrFail($id);
+
+        // Only the post author can update
+        if ($post->user_id !== $request->user()->id) {
+            abort(403, 'Forbidden');
+        }
+
+        if ($request->filled('title')) {
+            $post->title = $request->title;
+        }
+        if ($request->filled('content')) {
+            $post->content = $request->validated('content');
+        }
+        $post->save();
+
+        // Optionally update tags (same firstOrCreate + sync as store)
+        if ($request->has('tags')) {
+            $tagIds = collect($request->tags)->map(function ($tagName) {
+                return Tag::firstOrCreate(['name' => strtolower(trim($tagName))])->id;
+            });
+            $post->tags()->sync($tagIds);
+        }
+
+        $post->load(['user', 'tags']);
+
+        return new PostResource($post);
     }
 
     /**
-     * Remove the specified post.
+     * Delete a post. Only the author is allowed (403 otherwise).
      */
     #[OA\Delete(
         path: '/api/posts/{id}',
@@ -152,9 +214,17 @@ class PostController extends Controller
             new OA\Response(response: 404, description: 'Post not found'),
         ]
     )]
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
-        // TODO: Implement delete post
+        $post = Post::findOrFail($id);
+
+        if ($post->user_id !== $request->user()->id) {
+            abort(403, 'Forbidden');
+        }
+
+        $post->delete();
+
+        return response()->json(['message' => 'Post deleted successfully']);
     }
 
     /**
@@ -181,13 +251,33 @@ class PostController extends Controller
             ),
         ]
     )]
-    public function search()
+    public function search(Request $request)
     {
-        // TODO: Implement post search (keyword/tag)
+        $query = Post::with(['user', 'tags'])->withCount('comments');
+
+        // Optional: filter by keyword in title or content
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $query->where(function ($q) use ($keyword) {
+                $q->where('title', 'like', "%{$keyword}%")
+                    ->orWhere('content', 'like', "%{$keyword}%");
+            });
+        }
+
+        // Optional: filter by tag name
+        if ($request->filled('tag')) {
+            $query->whereHas('tags', function ($q) use ($request) {
+                $q->where('name', 'like', $request->tag);
+            });
+        }
+
+        $posts = $query->latest()->paginate($request->get('per_page', 15));
+
+        return PostResource::collection($posts);
     }
 
     /**
-     * Get posts for the authenticated user.
+     * List posts belonging to the authenticated user (auth required).
      */
     #[OA\Get(
         path: '/api/my-posts',
@@ -207,13 +297,20 @@ class PostController extends Controller
             new OA\Response(response: 401, description: 'Unauthenticated'),
         ]
     )]
-    public function myPosts()
+    public function myPosts(Request $request)
     {
-        // TODO: Implement get user's own posts
+        $posts = $request->user()
+            ->posts()
+            ->with(['user', 'tags'])
+            ->withCount('comments')
+            ->latest()
+            ->paginate(15);
+
+        return PostResource::collection($posts);
     }
 
     /**
-     * Get posts by a specific user.
+     * List posts by a given user ID (public). Used e.g. for profile page.
      */
     #[OA\Get(
         path: '/api/users/{id}/posts',
@@ -239,12 +336,54 @@ class PostController extends Controller
     {
         $user = \App\Models\User::findOrFail($id);
 
-        $posts = \App\Models\Post::where('user_id', $user->id)
+        $posts = Post::where('user_id', $user->id)
             ->with(['user', 'tags'])
             ->withCount('comments')
             ->latest()
             ->paginate(15);
 
-        return \App\Http\Resources\PostResource::collection($posts);
+        return PostResource::collection($posts);
+    }
+
+    /**
+     * Upload one image for use in post body (rich text). Stored under storage/app/public/post-images.
+     * Returns public URL for the client to embed in content. Auth required.
+     */
+    #[OA\Post(
+        path: '/api/posts/images',
+        summary: 'Upload image for post (stored locally)',
+        tags: ['Posts'],
+        security: [['sanctum' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['image'],
+                    properties: [
+                        new OA\Property(property: 'image', type: 'string', format: 'binary', description: 'Image file (jpeg, png, gif, webp, max 5MB)'),
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Image uploaded',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'url', type: 'string', example: 'http://localhost:8000/storage/post-images/xxx.jpg'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 422, description: 'Validation error'),
+        ]
+    )]
+    public function uploadImage(UploadPostImageRequest $request)
+    {
+        // Store under public disk so it is served at /storage/post-images/...
+        $path = $request->file('image')->store('post-images', 'public');
+        $url = Storage::disk('public')->url($path);
+
+        return response()->json(['url' => $url], 201);
     }
 }

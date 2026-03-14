@@ -20,8 +20,9 @@
                                          MySQL Database
 
 外部 API (前端直接调用，不经过后端):
-  • LinkedIn Jobs API → src/api/search.js
-  • News API          → src/api/news.js
+  • JSearch (RapidAPI)  → src/api/jobs.js   — Jobs 页面职位搜索
+  • LinkedIn Jobs API  → src/api/search.js
+  • News API           → src/api/news.js
 ```
 
 ---
@@ -156,6 +157,7 @@ Route::middleware('auth:sanctum')->group(function () {
 | Posts | GET | `/api/posts/{id}` | `PostController@show` |
 | Posts | GET | `/api/search/posts` | `PostController@search` |
 | Posts🔒 | POST | `/api/posts` | `PostController@store` |
+| Posts🔒 | POST | `/api/posts/images` | `PostController@uploadImage`（发帖图片上传，存本地） |
 | Posts🔒 | PUT | `/api/posts/{id}` | `PostController@update` |
 | Posts🔒 | DELETE | `/api/posts/{id}` | `PostController@destroy` |
 | Posts🔒 | GET | `/api/my-posts` | `PostController@myPosts` |
@@ -172,20 +174,20 @@ Route::middleware('auth:sanctum')->group(function () {
 ```
 User ──1:N──► Post ──N:M──► Tag
   │                │
-  │                └──1:N──► Comment
+  │                └──1:N──► Comment (parent_id 自关联，支持楼中楼)
   └──1:N──────────────────► Comment
 ```
 
 | Model | 关联 | 字段 |
 |-------|------|------|
 | `User` | hasMany(Post), hasMany(Comment) | id, name, email, password |
-| `Post` | belongsTo(User), belongsToMany(Tag), hasMany(Comment) | id, user_id, title, content |
+| `Post` | belongsTo(User), belongsToMany(Tag), hasMany(Comment) | id, user_id, title, content（富文本 HTML，图片通过 `/api/posts/images` 上传后存本地 `storage/app/public/post-images`） |
 | `Tag` | belongsToMany(Post) | id, name |
-| `Comment` | belongsTo(Post), belongsTo(User) | id, post_id, user_id, content |
+| `Comment` | belongsTo(Post), belongsTo(User), belongsTo(Comment, 'parent_id'), hasMany(Comment, 'parent_id' → replies) | id, post_id, user_id, **parent_id**（可选，回复某条评论）, content。删除父评论时子评论会级联删除（Model `deleting` 事件 + 外键 ON DELETE CASCADE） |
 
 **中间表：** `post_tag` (post_id, tag_id)
 
-**数据库表清单（共 6 张）：**
+**数据库表清单：**
 
 | 表名 | 用途 |
 |------|------|
@@ -193,7 +195,7 @@ User ──1:N──► Post ──N:M──► Tag
 | `posts` | 帖子 |
 | `tags` | 标签 |
 | `post_tag` | 帖子-标签多对多中间表 |
-| `comments` | 评论 |
+| `comments` | 评论（含 parent_id 外键指向 comments.id，ON DELETE CASCADE） |
 | `personal_access_tokens` | Sanctum API Token |
 | `sessions` | 会话（Laravel 系统表） |
 | `migrations` | 迁移记录（Laravel 系统表） |
@@ -215,13 +217,16 @@ User ──1:N──► Post ──N:M──► Tag
     "updated_at": "2026-03-04T12:00:00Z"
 }
 
-// CommentResource
+// CommentResource（支持楼中楼）
 {
     "id": 1,
     "content": "Great post!",
     "user": { "id": 1, "name": "John", "email": "...", "created_at": "..." },
+    "parent_id": null,
+    "parent": null,
     "created_at": "2026-03-04T12:00:00Z"
 }
+// 回复时 parent_id 为被回复评论 ID，parent 含 { id, user: { id, name } }
 
 // TagResource
 {
@@ -250,10 +255,11 @@ frontend/src/
 ├── api/                    # API 请求层（每个资源一个文件）
 │   ├── index.js            # Axios 实例 + 拦截器 (不要修改)
 │   ├── auth.js             # authApi: register, login, logout, getUser, getProfile, getUserPosts
-│   ├── posts.js            # postApi: getAll, getOne, create, update, delete, getMyPosts
+│   ├── posts.js            # postApi: getAll, getOne, create, update, delete, getMyPosts, uploadImage
 │   ├── comments.js         # commentApi: getByPost, create, delete
 │   ├── tags.js             # tagApi: getAll, getOne
 │   ├── search.js           # searchApi: searchPosts(后端), searchJobs(LinkedIn API)
+│   ├── jobs.js             # jobsApi: searchJobs (JSearch RapidAPI，Jobs 页)
 │   └── news.js             # newsApi: getHeadlines, search (News API 直接调用)
 │
 ├── stores/                 # Pinia 状态管理
@@ -269,22 +275,28 @@ frontend/src/
 │   │   ├── LoginView.vue       # 登录页（含输入验证、密码可见切换）
 │   │   └── RegisterView.vue    # 注册页（含密码强度指示器、成功动画）
 │   ├── posts/
-│   │   ├── PostListView.vue
-│   │   ├── PostDetailView.vue
-│   │   ├── PostCreateView.vue
+│   │   ├── PostListView.vue   # 帖子列表（整卡可点击进详情）
+│   │   ├── PostDetailView.vue # 帖子详情、评论树、楼中楼、编辑/删除
+│   │   ├── PostCreateView.vue # 发帖（富文本 + 图片上传）
 │   │   ├── PostEditView.vue
-│   │   └── MyPostsView.vue
+│   │   └── MyPostsView.vue   # 我的帖子（分页、删除确认弹窗）
 │   ├── profile/
-│   │   └── ProfileView.vue     # 用户主页（头像、统计、帖子列表、编辑资料弹窗）
+│   │   └── ProfileView.vue    # 用户主页（头像、统计、帖子摘要、编辑资料弹窗）
 │   ├── search/
 │   │   └── SearchView.vue
-│   └── news/
-│       └── NewsView.vue
+│   ├── news/
+│   │   └── NewsView.vue
+│   └── jobs/
+│       └── JobsView.vue       # 职位搜索（JSearch：query/country/date_posted/分页）
 │
 ├── components/
-│   └── layout/
-│       ├── AppHeader.vue   # 顶部导航（已完成样式）
-│       └── AppFooter.vue   # 页脚（已完成样式）
+│   ├── layout/
+│   │   ├── AppHeader.vue   # 顶部导航（含 Jobs 链接）
+│   │   └── AppFooter.vue   # 页脚
+│   ├── editor/
+│   │   └── RichTextEditor.vue # TipTap 富文本编辑器（图片上传）
+│   ├── CommentItem.vue     # 评论项（递归楼中楼、折叠回复、回复/删除）
+│   └── ConfirmModal.vue    # 通用确认弹窗（替代 confirm()）
 │
 └── assets/
     ├── base.css            # 设计系统 + CSS 变量 (不要修改变量名)
@@ -371,7 +383,7 @@ async function fetchPosts(params = {}) {
 **注意事项：**
 
 - **后端 API** 通过 `src/api/index.js` 统一 Axios 实例调用（自动带 Token）
-- **外部 API（LinkedIn、News）** 使用各自独立的 Axios 实例，不走后端代理
+- **外部 API（JSearch、LinkedIn、News）** 使用各自独立的 Axios 实例，不走后端代理；JSearch 用于 Jobs 页（`src/api/jobs.js`）
 - API 响应数据在 `response.data` 中，Laravel 的分页数据在 `response.data.data` 中
 - 不要直接在组件中调用 `axios`，必须通过 `src/api/` 下的模块
 
@@ -638,9 +650,12 @@ VITE_API_BASE_URL=http://localhost:8000/api              # 后端 API 地址
 VITE_NEWS_API_KEY=                                        # newsapi.org 密钥
 VITE_LINKEDIN_JOBS_API_KEY=                               # RapidAPI LinkedIn Jobs 密钥
 VITE_LINKEDIN_JOBS_API_URL=https://linkedin-jobs-api.p.rapidapi.com
+VITE_JSEARCH_API_URL=https://jsearch.p.rapidapi.com      # JSearch (RapidAPI) 职位搜索 base URL
+VITE_JSEARCH_RAPIDAPI_KEY=                                # JSearch 的 x-rapidapi-key
 ```
 
-> 前端环境变量必须以 `VITE_` 开头才能在代码中通过 `import.meta.env.VITE_XXX` 访问。
+> 前端环境变量必须以 `VITE_` 开头才能在代码中通过 `import.meta.env.VITE_XXX` 访问。  
+> `frontend/.env` 已加入 `.gitignore`，不会提交到仓库；新环境需自行创建并填写密钥。
 
 ---
 

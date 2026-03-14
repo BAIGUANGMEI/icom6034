@@ -26,6 +26,7 @@ class Comment extends Model
     protected $fillable = [
         'post_id',
         'user_id',
+        'parent_id',
         'content',
     ];
 
@@ -43,5 +44,32 @@ class Comment extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the parent comment (when this comment is a reply).
+     */
+    public function parent()
+    {
+        return $this->belongsTo(Comment::class, 'parent_id');
+    }
+
+    /**
+     * Get direct replies to this comment.
+     */
+    public function replies()
+    {
+        return $this->hasMany(Comment::class, 'parent_id');
+    }
+
+    /**
+     * When a comment is deleted, recursively delete all its replies (and their replies).
+     * Complements DB foreign key ON DELETE CASCADE so child comments are always removed.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (Comment $comment) {
+            $comment->replies()->each(fn (Comment $reply) => $reply->delete());
+        });
     }
 }

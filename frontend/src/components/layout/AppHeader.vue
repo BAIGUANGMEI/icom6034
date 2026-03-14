@@ -28,6 +28,10 @@
           <svg class="nav-icon" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 14H4V6h16v12ZM6 10h2v2H6v-2Zm0 4h2v2H6v-2Zm4-4h8v2h-8v-2Zm0 4h8v2h-8v-2Z"/></svg>
           <span>News</span>
         </router-link>
+        <router-link to="/jobs" class="nav-item" active-class="active">
+          <svg class="nav-icon" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2Zm-6 0h-4V4h4v2Z"/></svg>
+          <span>Jobs</span>
+        </router-link>
       </nav>
 
       <!-- Right Section -->
@@ -86,6 +90,7 @@
         <router-link to="/posts" class="mobile-link" @click="mobileOpen = false">Posts</router-link>
         <router-link to="/search" class="mobile-link" @click="mobileOpen = false">Search</router-link>
         <router-link to="/news" class="mobile-link" @click="mobileOpen = false">News</router-link>
+        <router-link to="/jobs" class="mobile-link" @click="mobileOpen = false">Jobs</router-link>
         <template v-if="authStore.isAuthenticated">
           <router-link to="/posts/create" class="mobile-link" @click="mobileOpen = false">New Post</router-link>
           <router-link v-if="authStore.user" :to="{ name: 'Profile', params: { id: authStore.user.id } }" class="mobile-link" @click="mobileOpen = false">My Profile</router-link>

@@ -4,6 +4,9 @@ namespace App\Http\Requests\Api;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validation for updating a post. All fields are optional (sometimes = validate when present).
+ */
 class UpdatePostRequest extends FormRequest
 {
     public function authorize(): bool

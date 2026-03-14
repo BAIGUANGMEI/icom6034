@@ -2,6 +2,16 @@
 
 A web-based platform where job seekers can share interview experiences, job offers, and career-related discussions within a community.
 
+## Main Features
+
+- **Posts** — Create, edit, delete posts with **rich text** (TipTap editor) and **local image uploads**; tag-based filtering and search.
+- **Comments** — Nested replies on posts; delete cascades to child comments.
+- **My Posts** — List and manage your own posts with pagination; confirmation modal for delete.
+- **User profiles** — View profile and posts; edit your profile when logged in.
+- **Jobs** — Search job listings via **JSearch API** (RapidAPI) with query, country, date posted, and pagination.
+- **News** — Industry news (News API, when configured).
+- **Search** — Full-text and tag search for posts; job search via external APIs.
+
 ## Tech Stack
 
 | Layer    | Technology                          |
@@ -17,8 +27,9 @@ A web-based platform where job seekers can share interview experiences, job offe
 
 ## External APIs (called directly from frontend)
 
-- **LinkedIn Jobs API** — Real-time job listings search (via RapidAPI)
-- **News API** (https://newsapi.org/) — Job market news and industry trends
+- **JSearch API** (RapidAPI) — Job search used by the **Jobs** page (`/jobs`); base URL and API key in `.env`.
+- **LinkedIn Jobs API** (RapidAPI) — Alternative job listings (e.g. Search page).
+- **News API** (https://newsapi.org/) — Job market news and industry trends.
 
 ## Prerequisites
 
@@ -127,15 +138,19 @@ cd frontend
 npm install
 ```
 
-Configure `frontend/.env` with API keys:
+Create `frontend/.env` (this file is gitignored; copy from a teammate or use the template below) and set:
 
 ```dotenv
 VITE_API_BASE_URL=http://localhost:8000/api
 
-# External API Keys (called directly from frontend)
+# External APIs (called directly from frontend)
 VITE_NEWS_API_KEY=your_news_api_key
 VITE_LINKEDIN_JOBS_API_KEY=your_linkedin_api_key
 VITE_LINKEDIN_JOBS_API_URL=https://linkedin-jobs-api.p.rapidapi.com
+
+# JSearch (Jobs page at /jobs)
+VITE_JSEARCH_API_URL=https://jsearch.p.rapidapi.com
+VITE_JSEARCH_RAPIDAPI_KEY=your_rapidapi_key
 ```
 
 Start the development server:
@@ -149,7 +164,7 @@ npm run dev
 
 - Backend API: Open http://localhost:8000/api/posts — should return a JSON response.
 - API Documentation: Open http://localhost:8000/api/documentation — Swagger UI with all endpoints.
-- Frontend App: Open http://localhost:5173 — should display the homepage.
+- Frontend App: Open http://localhost:5173 — homepage, Posts, Jobs (`/jobs`), and Search/News (with API keys).
 
 ## API Endpoints
 
@@ -170,25 +185,26 @@ npm run dev
 
 ### External APIs (called from frontend)
 
-| Service           | Endpoint                                  | Description                 |
-| ----------------- | ----------------------------------------- | --------------------------- |
-| LinkedIn Jobs API | `https://linkedin-jobs-api.p.rapidapi.com`| Search job listings          |
-| News API          | `https://newsapi.org/v2/top-headlines`    | Get headline news            |
-| News API          | `https://newsapi.org/v2/everything`       | Search news articles         |
+| Service        | Endpoint / usage                                      | Description              |
+| -------------- | ----------------------------------------------------- | ------------------------ |
+| JSearch        | `VITE_JSEARCH_API_URL` + `/search` (query, page, country, date_posted) | Job search (Jobs page)   |
+| LinkedIn Jobs  | `VITE_LINKEDIN_JOBS_API_URL`                           | Job listings (Search)    |
+| News API       | `https://newsapi.org/v2/top-headlines`, `/everything`  | Headlines and search     |
 
 ### Protected Routes (require Bearer Token)
 
-| Method | Endpoint                                | Description               |
-| ------ | --------------------------------------- | ------------------------- |
-| POST   | `/api/logout`                           | Logout                    |
-| GET    | `/api/user`                             | Get current user info     |
-| PUT    | `/api/user/profile`                     | Update user profile       |
-| POST   | `/api/posts`                            | Create a new post         |
-| PUT    | `/api/posts/{id}`                       | Update a post             |
-| DELETE | `/api/posts/{id}`                       | Delete a post             |
-| GET    | `/api/my-posts`                         | Get current user's posts  |
-| POST   | `/api/posts/{postId}/comments`          | Create a comment          |
-| DELETE | `/api/posts/{postId}/comments/{id}`     | Delete a comment          |
+| Method | Endpoint                                | Description                    |
+| ------ | --------------------------------------- | ------------------------------ |
+| POST   | `/api/logout`                           | Logout                         |
+| GET    | `/api/user`                             | Get current user info          |
+| PUT    | `/api/user/profile`                     | Update user profile            |
+| POST   | `/api/posts`                            | Create a new post              |
+| POST   | `/api/posts/images`                     | Upload image for post body     |
+| PUT    | `/api/posts/{id}`                       | Update a post                  |
+| DELETE | `/api/posts/{id}`                       | Delete a post                  |
+| GET    | `/api/my-posts`                         | Get current user's posts       |
+| POST   | `/api/posts/{postId}/comments`          | Create a comment (optional `parent_id` for reply) |
+| DELETE | `/api/posts/{postId}/comments/{id}`     | Delete a comment (cascades to replies) |
 
 ## Available Scripts
 

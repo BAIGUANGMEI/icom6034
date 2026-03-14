@@ -76,7 +76,7 @@
             class="post-card card"
           >
             <h3 class="post-title">{{ post.title }}</h3>
-            <p class="post-excerpt">{{ truncate(post.content, 150) }}</p>
+            <p class="post-excerpt">{{ excerpt(post.content) }}</p>
             <div class="post-meta">
               <div class="post-tags">
                 <span v-for="tag in post.tags" :key="tag.id" class="badge">{{ tag.name }}</span>
@@ -178,9 +178,13 @@ function formatDate(dateStr) {
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
-function truncate(text, length) {
-  if (!text) return ''
-  return text.length > length ? text.substring(0, length) + '...' : text
+/** Strip HTML and take first 150 chars for plain-text excerpt (post content is rich text). */
+function excerpt(html) {
+  if (!html) return ''
+  const div = document.createElement('div')
+  div.innerHTML = html
+  const text = (div.textContent || div.innerText || '').trim()
+  return text.length > 150 ? text.slice(0, 150) + '…' : text
 }
 
 async function fetchProfile(id) {
@@ -428,6 +432,10 @@ watch(() => route.params.id, (newId) => {
   color: var(--color-text-secondary);
   margin: 0 0 var(--space-md);
   line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .post-meta {

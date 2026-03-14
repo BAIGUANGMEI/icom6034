@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** API resource for Post: id, title, content (HTML), user, tags, comments_count, timestamps. */
 class PostResource extends JsonResource
 {
     public function toArray(Request $request): array
