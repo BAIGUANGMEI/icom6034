@@ -4,13 +4,12 @@ A web-based platform where job seekers can share interview experiences, job offe
 
 ## Main Features
 
-- **Posts** — Create, edit, delete posts with **rich text** (TipTap editor) and **local image uploads**; tag-based filtering and search.
+- **Posts** — Create, edit, delete posts with **rich text** (TipTap editor) and **local image uploads**; **search** (keyword + tag) and pagination on the posts list page.
 - **Comments** — Nested replies on posts; delete cascades to child comments.
 - **My Posts** — List and manage your own posts with pagination; confirmation modal for delete.
 - **User profiles** — View profile and posts; edit your profile when logged in.
 - **Jobs** — Search job listings via **JSearch API** (RapidAPI) with query, country, date posted, and pagination.
 - **News** — Industry news (News API, when configured).
-- **Search** — Full-text and tag search for posts; job search via external APIs.
 
 ## Tech Stack
 
@@ -28,8 +27,8 @@ A web-based platform where job seekers can share interview experiences, job offe
 ## External APIs (called directly from frontend)
 
 - **JSearch API** (RapidAPI) — Job search used by the **Jobs** page (`/jobs`); base URL and API key in `.env`.
-- **LinkedIn Jobs API** (RapidAPI) — Alternative job listings (e.g. Search page).
-- **News API** (https://newsapi.org/) — Job market news and industry trends.
+- **News API** (https://newsapi.org/) — Job market news and industry trends.  
+- Post search (keyword + tag) is on the **Posts** page (`/posts`), via backend `/api/search/posts`.
 
 ## Prerequisites
 
@@ -145,8 +144,6 @@ VITE_API_BASE_URL=http://localhost:8000/api
 
 # External APIs (called directly from frontend)
 VITE_NEWS_API_KEY=your_news_api_key
-VITE_LINKEDIN_JOBS_API_KEY=your_linkedin_api_key
-VITE_LINKEDIN_JOBS_API_URL=https://linkedin-jobs-api.p.rapidapi.com
 
 # JSearch (Jobs page at /jobs)
 VITE_JSEARCH_API_URL=https://jsearch.p.rapidapi.com
@@ -164,7 +161,7 @@ npm run dev
 
 - Backend API: Open http://localhost:8000/api/posts — should return a JSON response.
 - API Documentation: Open http://localhost:8000/api/documentation — Swagger UI with all endpoints.
-- Frontend App: Open http://localhost:5173 — homepage, Posts, Jobs (`/jobs`), and Search/News (with API keys).
+- Frontend App: Open http://localhost:5173 — homepage, Posts (with search), Jobs (`/jobs`), News (with API key).
 
 ## API Endpoints
 
@@ -185,11 +182,10 @@ npm run dev
 
 ### External APIs (called from frontend)
 
-| Service        | Endpoint / usage                                      | Description              |
-| -------------- | ----------------------------------------------------- | ------------------------ |
-| JSearch        | `VITE_JSEARCH_API_URL` + `/search` (query, page, country, date_posted) | Job search (Jobs page)   |
-| LinkedIn Jobs  | `VITE_LINKEDIN_JOBS_API_URL`                           | Job listings (Search)    |
-| News API       | `https://newsapi.org/v2/top-headlines`, `/everything`  | Headlines and search     |
+| Service   | Endpoint / usage                                      | Description              |
+| --------- | ----------------------------------------------------- | ------------------------ |
+| JSearch   | `VITE_JSEARCH_API_URL` + `/search` (query, page, country, date_posted) | Job search (Jobs page)   |
+| News API  | `https://newsapi.org/v2/top-headlines`, `/everything`  | Headlines and search     |
 
 ### Protected Routes (require Bearer Token)
 

@@ -1,10 +1,11 @@
 /**
- * Pinia store for posts: list, single post, create/update/delete, my posts.
+ * Pinia store for posts: list, single post, search, create/update/delete, my posts.
  * Handles loading state and Laravel-style pagination (data.data, data.links, data.meta).
  */
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { postApi } from '@/api/posts'
+import { searchApi } from '@/api/search'
 
 export const usePostStore = defineStore('post', () => {
   const posts = ref([])
@@ -25,6 +26,24 @@ export const usePostStore = defineStore('post', () => {
       }
     } catch (error) {
       console.error('Failed to fetch posts:', error)
+      posts.value = []
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /** Search posts by keyword and/or tag; same pagination shape as fetchPosts */
+  async function searchPosts(params = {}) {
+    loading.value = true
+    try {
+      const { data } = await searchApi.searchPosts(params)
+      posts.value = data.data ?? []
+      pagination.value = {
+        links: data.links ?? {},
+        meta: data.meta ?? {},
+      }
+    } catch (error) {
+      console.error('Failed to search posts:', error)
       posts.value = []
     } finally {
       loading.value = false
@@ -93,6 +112,7 @@ export const usePostStore = defineStore('post', () => {
     loading,
     pagination,
     fetchPosts,
+    searchPosts,
     fetchPost,
     createPost,
     updatePost,

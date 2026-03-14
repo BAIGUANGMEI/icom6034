@@ -53,11 +53,6 @@ const routes = [
     component: () => import('@/views/profile/ProfileView.vue'),
   },
   {
-    path: '/search',
-    name: 'Search',
-    component: () => import('@/views/search/SearchView.vue'),
-  },
-  {
     path: '/news',
     name: 'News',
     component: () => import('@/views/news/NewsView.vue'),

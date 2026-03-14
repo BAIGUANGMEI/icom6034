@@ -20,10 +20,6 @@
           <svg class="nav-icon" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 16H5V5h14v14ZM7 7h10v2H7V7Zm0 4h10v2H7v-2Zm0 4h7v2H7v-2Z"/></svg>
           <span>Posts</span>
         </router-link>
-        <router-link to="/search" class="nav-item" active-class="active">
-          <svg class="nav-icon" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5Zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/></svg>
-          <span>Search</span>
-        </router-link>
         <router-link to="/news" class="nav-item" active-class="active">
           <svg class="nav-icon" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 14H4V6h16v12ZM6 10h2v2H6v-2Zm0 4h2v2H6v-2Zm4-4h8v2h-8v-2Zm0 4h8v2h-8v-2Z"/></svg>
           <span>News</span>
@@ -88,7 +84,6 @@
       <nav class="mobile-nav" v-show="mobileOpen">
         <router-link to="/" class="mobile-link" @click="mobileOpen = false">Home</router-link>
         <router-link to="/posts" class="mobile-link" @click="mobileOpen = false">Posts</router-link>
-        <router-link to="/search" class="mobile-link" @click="mobileOpen = false">Search</router-link>
         <router-link to="/news" class="mobile-link" @click="mobileOpen = false">News</router-link>
         <router-link to="/jobs" class="mobile-link" @click="mobileOpen = false">Jobs</router-link>
         <template v-if="authStore.isAuthenticated">

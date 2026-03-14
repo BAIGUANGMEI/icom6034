@@ -2,9 +2,31 @@
   <div class="post-list-view container">
     <h1 class="page-title">All Posts</h1>
     <div class="list-actions">
-      <router-link v-if="authStore.isAuthenticated" :to="{ name: 'CreatePost' }" class="btn btn-primary">
-        Create Post
-      </router-link>
+      <form class="search-form" @submit.prevent="runSearch">
+        <input
+          v-model="searchKeyword"
+          type="text"
+          class="form-input search-input"
+          placeholder="Search by keyword…"
+          aria-label="Search posts by keyword"
+        />
+        <input
+          v-model="searchTag"
+          type="text"
+          class="form-input search-input search-input--tag"
+          placeholder="Tag (optional)"
+          aria-label="Filter by tag"
+        />
+        <button type="submit" class="btn btn-outline btn-sm">Search</button>
+        <button v-if="isSearchActive" type="button" class="btn btn-ghost btn-sm" @click="clearSearch">
+          Clear
+        </button>
+      </form>
+      <div v-if="authStore.isAuthenticated" class="list-actions-right">
+        <router-link :to="{ name: 'CreatePost' }" class="btn btn-primary">
+          Create Post
+        </router-link>
+      </div>
     </div>
     <div v-if="loading" class="loading">Loading…</div>
     <template v-else>
@@ -44,7 +66,9 @@
           </div>
         </article>
       </div>
-      <p v-else class="text-muted empty">No posts yet. Create the first one!</p>
+      <p v-else class="text-muted empty">
+        {{ isSearchActive ? 'No posts match your search.' : 'No posts yet. Create the first one!' }}
+      </p>
       <div v-if="pagination.meta?.last_page > 1" class="pagination">
         <button
           class="btn btn-outline btn-sm"
@@ -70,10 +94,10 @@
 
 <script setup>
 /**
- * Post list page: paginated list of posts with title, plain-text excerpt, author, date, comment count, tags.
- * Create Post button shown when authenticated. Previous/Next for pagination.
+ * Post list page: search (keyword + tag) and paginated list of posts.
+ * Search is inline; no separate /search page.
  */
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { usePostStore } from '@/stores/post'
@@ -84,7 +108,13 @@ const postStore = usePostStore()
 const authStore = useAuthStore()
 const { posts, loading, pagination } = storeToRefs(postStore)
 
+const searchKeyword = ref('')
+const searchTag = ref('')
+
 const currentPage = computed(() => pagination.value.meta?.current_page ?? 1)
+const isSearchActive = computed(
+  () => searchKeyword.value.trim() !== '' || searchTag.value.trim() !== ''
+)
 
 /** Strip HTML and take first 150 chars for list excerpt */
 function excerpt(html) {
@@ -108,8 +138,32 @@ function goToPost(id) {
   router.push({ name: 'PostDetail', params: { id } })
 }
 
+function runSearch() {
+  const keyword = searchKeyword.value.trim()
+  const tag = searchTag.value.trim()
+  if (keyword || tag) {
+    postStore.searchPosts({ keyword: keyword || undefined, tag: tag || undefined, page: 1 })
+  } else {
+    postStore.fetchPosts()
+  }
+}
+
+function clearSearch() {
+  searchKeyword.value = ''
+  searchTag.value = ''
+  postStore.fetchPosts()
+}
+
 function goPage(page) {
-  postStore.fetchPosts({ page })
+  if (isSearchActive.value) {
+    postStore.searchPosts({
+      keyword: searchKeyword.value.trim() || undefined,
+      tag: searchTag.value.trim() || undefined,
+      page,
+    })
+  } else {
+    postStore.fetchPosts({ page })
+  }
 }
 
 onMounted(() => {
@@ -129,7 +183,40 @@ onMounted(() => {
 }
 
 .list-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
   margin-bottom: var(--space-lg);
+}
+
+.list-actions-right {
+  margin-left: auto;
+}
+
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.search-input {
+  width: 180px;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+}
+
+.search-input--tag {
+  width: 120px;
+}
+
+.search-form .form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
 
 .post-list {
