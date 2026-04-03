@@ -1,40 +1,55 @@
 <template>
-  <div class="post-list-view container">
-    <h1 class="page-title">All Posts</h1>
+  <div class="post-list-view">
     <div class="list-actions">
-      <form class="search-form" @submit.prevent="runSearch">
-        <input
-          v-model="searchTitle"
-          type="text"
-          class="form-input search-input"
-          placeholder="Search by title..."
-          aria-label="Search posts by title"
-        />
-        <input
-          v-model="searchTag"
-          type="text"
-          class="form-input search-input search-input--tag"
-          placeholder="Tag (optional)"
-          aria-label="Filter by tag"
-        />
-        <button type="submit" class="btn btn-outline btn-sm">Search</button>
-        <button v-if="isSearchActive" type="button" class="btn btn-ghost btn-sm" @click="clearSearch">
-          Clear
-        </button>
-      </form>
-      <div v-if="authStore.isAuthenticated" class="list-actions-right">
-        <router-link :to="{ name: 'CreatePost' }" class="btn btn-primary">
-          Create Post
-        </router-link>
+      <div class="list-heading">
+        <div>
+          <h1 class="list-title">All Posts</h1>
+          <p class="list-subtitle">Search by post title or tag, then browse the latest community posts.</p>
+        </div>
+        <div v-if="authStore.isAuthenticated" class="create-post-wrap">
+          <router-link :to="{ name: 'CreatePost' }" class="btn btn-primary create-post-btn">
+            Create Post
+          </router-link>
+        </div>
       </div>
+      <form class="search-form" @submit.prevent="runSearch">
+        <div class="search-field">
+          <label for="post-title-search" class="search-label">Title</label>
+          <input
+            id="post-title-search"
+            v-model="searchTitle"
+            type="text"
+            class="form-input search-input"
+            placeholder="Search by title..."
+            aria-label="Search posts by title"
+          />
+        </div>
+        <div class="search-field search-field--tag">
+          <label for="post-tag-search" class="search-label">Tag</label>
+          <input
+            id="post-tag-search"
+            v-model="searchTag"
+            type="text"
+            class="form-input search-input search-input--tag"
+            placeholder="frontend, interview..."
+            aria-label="Filter by tag"
+          />
+        </div>
+        <div class="search-actions">
+          <button type="submit" class="btn btn-primary btn-sm">Search</button>
+          <button v-if="isSearchActive" type="button" class="btn btn-outline btn-sm" @click="clearSearch">
+            Clear
+          </button>
+        </div>
+      </form>
     </div>
-    <div v-if="loading" class="loading">Loading…</div>
+    <div v-if="loading" class="loading card">Loading…</div>
     <template v-else>
       <div v-if="posts.length" class="post-list">
         <article
           v-for="post in posts"
           :key="post.id"
-          class="card post-card post-card--clickable"
+          class="post-card post-card--clickable"
           role="button"
           tabindex="0"
           @click="goToPost(post.id)"
@@ -66,9 +81,9 @@
           </div>
         </article>
       </div>
-      <p v-else class="text-muted empty">
-        {{ isSearchActive ? 'No posts match your search.' : 'No posts yet. Create the first one!' }}
-      </p>
+      <div v-else class="empty card">
+        <p class="empty-title">{{ isSearchActive ? 'No posts match your search.' : 'No posts yet. Create the first one!' }}</p>
+      </div>
       <div v-if="pagination.meta?.last_page > 1" class="pagination">
         <button
           class="btn btn-outline btn-sm"
@@ -94,7 +109,7 @@
 
 <script setup>
 /**
- * Post list page: search (keyword + tag) and paginated list of posts.
+ * Post list page: search (title + tag) and paginated list of posts.
  * Search is inline; no separate /search page.
  */
 import { onMounted, computed, ref } from 'vue'
@@ -173,61 +188,98 @@ onMounted(() => {
 
 <style scoped>
 .post-list-view {
-  padding: var(--space-lg) var(--space-md);
-}
-
-.page-title {
-  margin-bottom: var(--space-lg);
-  color: var(--color-heading);
-  font-size: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
 }
 
 .list-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
   gap: var(--space-md);
-  margin-bottom: var(--space-lg);
 }
 
-.list-actions-right {
-  margin-left: auto;
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm) var(--space-md);
+}
+
+.list-title {
+  margin: 0;
+  font-size: clamp(1.6rem, 2.2vw, 2rem);
+}
+
+.list-subtitle {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+}
+
+.create-post-wrap {
+  flex-shrink: 0;
+}
+
+.create-post-btn {
+  min-width: 160px;
+  justify-content: center;
 }
 
 .search-form {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
+  align-items: end;
+  gap: var(--space-md);
+  padding-top: var(--space-sm);
+  border-top: 1px dashed var(--color-border);
+}
+
+.search-field {
+  min-width: 220px;
+  flex: 1;
+}
+
+.search-field--tag {
+  flex: 0 0 220px;
+}
+
+.search-label {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .search-input {
-  width: 180px;
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  font-size: 0.9375rem;
+  width: 100%;
 }
 
 .search-input--tag {
-  width: 120px;
+  width: 100%;
 }
 
-.search-form .form-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
+.search-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
 }
 
 .post-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: 0;
 }
 
 .post-card {
-  padding: var(--space-lg);
-  transition: box-shadow var(--transition-fast);
+  padding: var(--space-lg) 0;
+  border-bottom: 1px dashed var(--color-border);
+  transition:
+    transform var(--transition-normal),
+    color var(--transition-normal);
 }
 
 .post-card--clickable {
@@ -235,7 +287,7 @@ onMounted(() => {
 }
 
 .post-card:hover {
-  box-shadow: var(--shadow-md);
+  transform: translateX(2px);
 }
 
 .post-card-title {
@@ -245,11 +297,10 @@ onMounted(() => {
 
 .post-card-title a {
   color: var(--color-heading);
-  text-decoration: none;
 }
 
 .post-card-title a:hover {
-  color: var(--color-primary);
+  color: var(--color-secondary);
 }
 
 .post-card-excerpt {
@@ -269,23 +320,32 @@ onMounted(() => {
   align-items: center;
   gap: var(--space-md);
   margin-bottom: var(--space-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
 }
 
 .post-card-meta .author {
-  color: var(--color-primary);
-  text-decoration: none;
+  color: var(--color-primary-dark);
+  font-weight: 700;
 }
 
 .post-card-tags .badge {
   margin-right: var(--space-sm);
+  background: transparent;
+  border-style: dashed;
+  box-shadow: none;
+  color: var(--color-text-secondary);
 }
 
 .loading,
 .empty {
-  padding: var(--space-xl);
+  padding: var(--space-2xl);
   text-align: center;
+}
+
+.empty-title {
+  color: var(--color-text-secondary);
+  font-size: 1rem;
 }
 
 .pagination {
@@ -299,5 +359,25 @@ onMounted(() => {
 .page-info {
   color: var(--color-text-secondary);
   font-size: 0.875rem;
+}
+
+@media (max-width: 640px) {
+  .search-field,
+  .search-field--tag,
+  .search-actions,
+  .search-actions .btn,
+  .create-post-wrap,
+  .create-post-wrap .btn {
+    width: 100%;
+  }
+
+  .list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .create-post-btn {
+    min-width: 0;
+  }
 }
 </style>

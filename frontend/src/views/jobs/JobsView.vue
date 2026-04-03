@@ -1,7 +1,9 @@
 <template>
-  <div class="jobs-view container">
-    <h1 class="page-title">Jobs</h1>
-    <p class="page-desc">Search job listings via JSearch (RapidAPI).</p>
+  <div class="jobs-view">
+    <div class="page-header">
+      <h1 class="page-title">Jobs</h1>
+      <p class="page-desc">Search jobs by keyword, country, date posted, and page.</p>
+    </div>
 
     <form class="jobs-search card" @submit.prevent="runSearch">
       <div class="search-row">
@@ -156,24 +158,31 @@ async function runSearch() {
 
 <style scoped>
 .jobs-view {
-  padding: var(--space-lg) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.page-header {
+  display: grid;
+  gap: var(--space-xs);
 }
 
 .page-title {
-  margin-bottom: var(--space-xs);
-  color: var(--color-heading);
-  font-size: 1.5rem;
+  margin: 0;
+  font-size: clamp(1.7rem, 2.4vw, 2.2rem);
 }
 
 .page-desc {
-  margin-bottom: var(--space-lg);
+  margin: 0;
   color: var(--color-text-secondary);
-  font-size: 0.9375rem;
 }
 
 .jobs-search {
   padding: var(--space-lg);
-  margin-bottom: var(--space-lg);
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .search-row {
@@ -239,6 +248,13 @@ async function runSearch() {
 
 .job-card {
   padding: var(--space-lg);
+  box-shadow: var(--shadow-soft);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.job-card:hover {
+  transform: rotate(-1deg) translateY(-3px);
+  box-shadow: var(--shadow-yellow);
 }
 
 .job-title {
@@ -258,8 +274,8 @@ async function runSearch() {
 }
 
 .job-employer {
-  font-weight: 600;
-  color: var(--color-text-primary);
+  font-weight: 700;
+  color: var(--color-primary-dark);
 }
 
 .job-desc {
@@ -283,4 +299,5 @@ async function runSearch() {
 .job-apply {
   display: inline-block;
 }
+
 </style>

@@ -58,6 +58,7 @@
           <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 16H5V5h14v14ZM7 7h10v2H7V7Zm0 4h10v2H7v-2Zm0 4h7v2H7v-2Z"/></svg>
           Posts
         </h2>
+        <p class="section-kicker text-secondary">A colorful archive of this user's tagged stories.</p>
 
         <div v-if="postsLoading" class="loading-state">
           <div class="spinner-lg"></div>
@@ -90,6 +91,69 @@
               </div>
             </div>
           </router-link>
+        </div>
+      </div>
+
+      <div class="profile-jobs">
+        <h2 class="section-title">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M10 3a2 2 0 0 0-2 2v1H6a3 3 0 0 0-3 3v2h18V9a3 3 0 0 0-3-3h-2V5a2 2 0 0 0-2-2h-4Zm4 3h-4V5h4v1Zm7 6H3v6a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-6Zm-9 2h2a1 1 0 1 1 0 2h-2a1 1 0 1 1 0-2Z"/></svg>
+          Recommended Jobs
+        </h2>
+        <p class="section-kicker text-secondary">Based on the tags that show up most in this profile's posts.</p>
+
+        <p v-if="recommendationTags.length" class="section-hint text-secondary">
+          Based on tags:
+          <span v-for="tag in recommendationTags" :key="tag" class="badge recommendation-tag">{{ tag }}</span>
+        </p>
+
+        <div v-if="!hasJobsApiKey" class="empty-state card">
+          <p class="text-secondary">
+            Add `VITE_JSEARCH_RAPIDAPI_KEY` in `frontend/.env` to enable job recommendations.
+          </p>
+        </div>
+
+        <div v-else-if="jobsLoading" class="loading-state">
+          <div class="spinner-lg"></div>
+          <p class="text-secondary">Loading recommended jobs...</p>
+        </div>
+
+        <div v-else-if="jobsError" class="empty-state card">
+          <p class="text-secondary">{{ jobsError }}</p>
+        </div>
+
+        <div v-else-if="posts.length === 0" class="empty-state card">
+          <p class="text-secondary">Create some posts first to get job recommendations.</p>
+        </div>
+
+        <div v-else-if="recommendationTags.length === 0" class="empty-state card">
+          <p class="text-secondary">Add tags to posts to unlock related job recommendations.</p>
+        </div>
+
+        <div v-else-if="recommendedJobs.length === 0" class="empty-state card">
+          <p class="text-secondary">No matching jobs were found for these tags.</p>
+        </div>
+
+        <div v-else class="jobs-list">
+          <article v-for="(job, index) in recommendedJobs" :key="job.job_id || index" class="card job-card">
+            <h3 class="job-title">{{ job.job_title || 'Untitled job' }}</h3>
+            <div class="job-meta">
+              <span v-if="job.employer_name" class="job-employer">{{ job.employer_name }}</span>
+              <span v-if="job.job_city || job.job_country">
+                {{ [job.job_city, job.job_country].filter(Boolean).join(', ') }}
+              </span>
+              <span v-if="job.job_employment_type">{{ job.job_employment_type }}</span>
+            </div>
+            <p v-if="job.job_description" class="job-desc">{{ truncate(job.job_description, 180) }}</p>
+            <a
+              v-if="job.job_apply_link"
+              :href="job.job_apply_link"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn btn-primary btn-sm"
+            >
+              Apply
+            </a>
+          </article>
         </div>
       </div>
     </template>
@@ -152,6 +216,7 @@ import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { authApi } from '@/api/auth'
 import api from '@/api/index'
+import { searchJobs } from '@/api/jobs'
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -161,6 +226,10 @@ const posts = ref([])
 const loading = ref(true)
 const postsLoading = ref(true)
 const error = ref(false)
+const recommendedJobs = ref([])
+const recommendationTags = ref([])
+const jobsLoading = ref(false)
+const jobsError = ref('')
 
 // Edit modal
 const showEditModal = ref(false)
@@ -171,6 +240,8 @@ const editLoading = ref(false)
 const isOwnProfile = computed(() => {
   return authStore.user && profile.value && authStore.user.id === profile.value.id
 })
+
+const hasJobsApiKey = computed(() => Boolean(import.meta.env.VITE_JSEARCH_RAPIDAPI_KEY))
 
 function formatDate(dateStr) {
   if (!dateStr) return ''
@@ -185,6 +256,60 @@ function excerpt(html) {
   div.innerHTML = html
   const text = (div.textContent || div.innerText || '').trim()
   return text.length > 150 ? text.slice(0, 150) + '…' : text
+}
+
+function truncate(text, len) {
+  if (!text) return ''
+  const str = typeof text === 'string' ? text : String(text)
+  return str.length > len ? str.slice(0, len) + '…' : str
+}
+
+function getTopTags(postList) {
+  const counts = new Map()
+
+  postList.forEach((post) => {
+    post.tags?.forEach((tag) => {
+      const name = tag?.name?.trim()
+      if (!name) return
+      counts.set(name, (counts.get(name) || 0) + 1)
+    })
+  })
+
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 3)
+    .map(([name]) => name)
+}
+
+async function fetchRecommendedJobs(postList) {
+  recommendationTags.value = getTopTags(postList)
+  recommendedJobs.value = []
+  jobsError.value = ''
+
+  if (!hasJobsApiKey.value || recommendationTags.value.length === 0) {
+    return
+  }
+
+  jobsLoading.value = true
+
+  try {
+    const query = `${recommendationTags.value.join(' OR ')} jobs`
+    const { data } = await searchJobs({
+      query,
+      page: 1,
+      num_pages: 1,
+      country: 'us',
+      date_posted: 'month',
+    })
+
+    recommendedJobs.value = (data?.data ?? []).slice(0, 6)
+  } catch (e) {
+    recommendedJobs.value = []
+    jobsError.value =
+      e.response?.data?.message || e.message || 'Failed to fetch related job recommendations.'
+  } finally {
+    jobsLoading.value = false
+  }
 }
 
 async function fetchProfile(id) {
@@ -206,8 +331,12 @@ async function fetchUserPosts(id) {
   try {
     const { data } = await authApi.getUserPosts(id)
     posts.value = data.data
+    await fetchRecommendedJobs(posts.value)
   } catch (e) {
     posts.value = []
+    recommendationTags.value = []
+    recommendedJobs.value = []
+    jobsError.value = ''
   } finally {
     postsLoading.value = false
   }
@@ -245,17 +374,19 @@ watch(() => route.params.id, (newId) => {
 
 <style scoped>
 .profile-page {
-  max-width: 800px;
+  max-width: 980px;
   margin: 0 auto;
 }
 
-/* ===== Loading & Error ===== */
-.loading-state {
+.loading-state,
+.empty-state,
+.error-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-2xl);
+  text-align: center;
 }
 
 .spinner-lg {
@@ -271,34 +402,18 @@ watch(() => route.params.id, (newId) => {
   to { transform: rotate(360deg); }
 }
 
-.error-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-2xl);
-  text-align: center;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-2xl);
-  text-align: center;
-}
-
-/* ===== Profile Header ===== */
 .profile-header {
   overflow: hidden;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-2xl);
+  box-shadow: var(--shadow-soft);
 }
 
 .profile-cover {
-  height: 120px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
   position: relative;
+  height: 150px;
+  background:
+    radial-gradient(circle at 22% 35%, rgba(255, 255, 255, 0.5) 0 12%, transparent 13%),
+    linear-gradient(135deg, var(--color-primary), var(--color-secondary));
 }
 
 .profile-info {
@@ -311,19 +426,20 @@ watch(() => route.params.id, (newId) => {
 }
 
 .profile-avatar {
-  width: 72px;
-  height: 72px;
+  width: 76px;
+  height: 76px;
   border-radius: 50%;
-  background: var(--color-primary);
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-quaternary);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 28px;
-  border: 4px solid var(--color-surface);
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.8rem;
   flex-shrink: 0;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-pop);
 }
 
 .profile-details {
@@ -332,14 +448,11 @@ watch(() => route.params.id, (newId) => {
 }
 
 .profile-name {
-  font-size: 1.375rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
   margin: 0 0 var(--space-xs);
+  font-size: 2rem;
 }
 
 .profile-email {
-  font-size: 0.9375rem;
   margin: 0 0 var(--space-xs);
 }
 
@@ -356,10 +469,9 @@ watch(() => route.params.id, (newId) => {
   flex-shrink: 0;
 }
 
-/* ===== Stats ===== */
 .profile-stats {
   display: flex;
-  border-top: 1px solid var(--color-border);
+  border-top: var(--border-width) dashed var(--color-border-soft);
 }
 
 .stat-item {
@@ -367,35 +479,40 @@ watch(() => route.params.id, (newId) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--space-md);
   gap: 2px;
+  padding: var(--space-md);
 }
 
 .stat-item + .stat-item {
-  border-left: 1px solid var(--color-border);
+  border-left: var(--border-width) dashed var(--color-border-soft);
 }
 
 .stat-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--color-primary);
+  font-size: 1.75rem;
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 800;
+  color: var(--color-primary-dark);
 }
 
 .stat-label {
-  font-size: 0.8125rem;
+  font-size: 0.78rem;
   color: var(--color-text-muted);
-  font-weight: 500;
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
-/* ===== Posts Section ===== */
 .section-title {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-sm);
+  font-size: 1.5rem;
+}
+
+.section-kicker {
+  margin-bottom: var(--space-lg);
 }
 
 .posts-list {
@@ -404,34 +521,47 @@ watch(() => route.params.id, (newId) => {
   gap: var(--space-md);
 }
 
+.profile-jobs {
+  margin-top: var(--space-2xl);
+}
+
+.section-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-md);
+}
+
+.recommendation-tag {
+  margin-left: 0;
+}
+
 .post-card {
   display: block;
   padding: var(--space-lg);
-  text-decoration: none;
+  box-shadow: var(--shadow-soft);
   transition: box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
 .post-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  box-shadow: var(--shadow-pink);
+  transform: rotate(-1deg) translateY(-2px);
 }
 
 .post-title {
-  font-size: 1.0625rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
   margin: 0 0 var(--space-sm);
+  font-size: 1.2rem;
 }
 
 .post-card:hover .post-title {
-  color: var(--color-primary);
+  color: var(--color-secondary);
 }
 
 .post-excerpt {
-  font-size: 0.9375rem;
-  color: var(--color-text-secondary);
   margin: 0 0 var(--space-md);
-  line-height: 1.5;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -465,11 +595,51 @@ watch(() => route.params.id, (newId) => {
   gap: 4px;
 }
 
-/* ===== Modal ===== */
+.jobs-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-md);
+}
+
+.job-card {
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-soft);
+}
+
+.job-title {
+  margin: 0 0 var(--space-sm);
+  font-size: 1.05rem;
+}
+
+.job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.job-employer {
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.job-desc {
+  margin: 0 0 var(--space-md);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -479,8 +649,9 @@ watch(() => route.params.id, (newId) => {
 
 .modal {
   width: 100%;
-  max-width: 440px;
-  padding: var(--space-lg);
+  max-width: 460px;
+  padding: var(--space-xl);
+  box-shadow: var(--shadow-soft);
 }
 
 .modal-header {
@@ -491,27 +662,26 @@ watch(() => route.params.id, (newId) => {
 }
 
 .modal-header h2 {
-  font-size: 1.125rem;
-  font-weight: 700;
   margin: 0;
+  font-size: 1.5rem;
 }
 
 .modal-close {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
+  width: 36px;
+  height: 36px;
+  border: var(--border-width) solid transparent;
   background: none;
   color: var(--color-text-muted);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
+  border-radius: 50%;
 }
 
 .modal-close:hover {
-  background: var(--color-background);
+  background: var(--color-primary-lighter);
   color: var(--color-text-primary);
+  border-color: var(--color-border);
 }
 
 .form-group {
@@ -520,28 +690,17 @@ watch(() => route.params.id, (newId) => {
 
 .form-label {
   display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
   margin-bottom: var(--space-xs);
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .form-input {
   width: 100%;
-  padding: 10px 12px;
-  font-size: 0.9375rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text-primary);
-  transition: border-color var(--transition-fast);
-  box-sizing: border-box;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-lighter);
 }
 
 .form-input.input-error {
@@ -557,6 +716,7 @@ watch(() => route.params.id, (newId) => {
 .modal-actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: var(--space-sm);
   margin-top: var(--space-lg);
 }
@@ -573,7 +733,6 @@ watch(() => route.params.id, (newId) => {
   vertical-align: middle;
 }
 
-/* ===== Transition ===== */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;
@@ -584,7 +743,6 @@ watch(() => route.params.id, (newId) => {
   opacity: 0;
 }
 
-/* ===== Responsive ===== */
 @media (max-width: 640px) {
   .profile-info {
     flex-direction: column;
@@ -609,6 +767,10 @@ watch(() => route.params.id, (newId) => {
   .post-meta {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
   }
 }
 </style>

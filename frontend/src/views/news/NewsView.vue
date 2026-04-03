@@ -1,9 +1,9 @@
 <template>
-  <div class="news-view container">
-    <h1 class="page-title">News</h1>
-    <p class="page-desc">
-      Search global headlines with News API, or browse the latest technology top headlines.
-    </p>
+  <div class="news-view">
+    <div class="page-header">
+      <h1 class="page-title">News</h1>
+      <p class="page-desc">Search by keyword or switch back to top headlines.</p>
+    </div>
 
     <div v-if="!hasApiKey" class="warning-message card">
       Missing `VITE_NEWS_API_KEY` in `frontend/.env`. Add your News API key to enable this page.
@@ -168,19 +168,24 @@ onMounted(async () => {
 
 <style scoped>
 .news-view {
-  padding: var(--space-lg) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.page-header {
+  display: grid;
+  gap: var(--space-xs);
 }
 
 .page-title {
-  margin-bottom: var(--space-xs);
-  color: var(--color-heading);
-  font-size: 1.5rem;
+  margin: 0;
+  font-size: clamp(1.7rem, 2.4vw, 2.2rem);
 }
 
 .page-desc {
-  margin-bottom: var(--space-lg);
+  margin: 0;
   color: var(--color-text-secondary);
-  font-size: 0.9375rem;
 }
 
 .news-search,
@@ -190,6 +195,12 @@ onMounted(async () => {
 .empty-state {
   padding: var(--space-lg);
   margin-bottom: var(--space-lg);
+}
+
+.news-search {
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .warning-message {
@@ -259,8 +270,7 @@ onMounted(async () => {
 
 .section-title {
   margin-bottom: var(--space-xs);
-  font-size: 1.25rem;
-  color: var(--color-heading);
+  font-size: 1.4rem;
 }
 
 .section-subtitle {
@@ -276,6 +286,13 @@ onMounted(async () => {
 
 .news-card {
   overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.news-card:hover {
+  transform: rotate(-1deg) translateY(-3px);
+  box-shadow: var(--shadow-pink);
 }
 
 .news-image {
@@ -311,7 +328,7 @@ onMounted(async () => {
 }
 
 .news-title a:hover {
-  color: var(--color-primary);
+  color: var(--color-secondary);
 }
 
 .news-desc {

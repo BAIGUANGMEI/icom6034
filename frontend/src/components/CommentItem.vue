@@ -115,14 +115,14 @@ const replyCount = computed(() => props.comment.replies?.length ?? 0)
 }
 
 .comment-item:hover .comment-item-inner {
-  background: var(--color-gray-50);
+  background: rgba(139, 92, 246, 0.06);
   border-radius: var(--radius-md);
 }
 
 .comment-item-inner {
   display: flex;
   gap: var(--space-md);
-  padding: var(--space-md) 0;
+  padding: var(--space-md);
 }
 
 .comment-item--reply .comment-item-inner {
@@ -136,11 +136,13 @@ const replyCount = computed(() => props.comment.replies?.length ?? 0)
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-primary-lighter);
-  color: var(--color-primary-dark);
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-tertiary);
+  color: var(--color-foreground);
   border-radius: var(--radius-full);
   font-size: 0.875rem;
-  font-weight: 600;
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 800;
 }
 
 .comment-item--reply .comment-avatar {
@@ -164,14 +166,13 @@ const replyCount = computed(() => props.comment.replies?.length ?? 0)
 }
 
 .comment-author {
-  font-weight: 600;
-  color: var(--color-primary);
-  text-decoration: none;
+  font-weight: 700;
+  color: var(--color-primary-dark);
   transition: color var(--transition-fast);
 }
 
 .comment-author:hover {
-  color: var(--color-primary-dark);
+  color: var(--color-secondary);
   text-decoration: underline;
 }
 
@@ -209,47 +210,41 @@ const replyCount = computed(() => props.comment.replies?.length ?? 0)
 }
 
 .btn-ghost-sm {
-  padding: var(--space-xs) var(--space-sm);
-  border: none;
-  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-full);
   background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
+  color: var(--color-text-secondary);
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 700;
   transition: color var(--transition-fast), background var(--transition-fast);
 }
 
 .btn-ghost-sm:hover {
-  color: var(--color-primary);
-  background: var(--color-primary-lighter);
+  color: var(--color-heading);
+  background: var(--color-tertiary);
+  border-color: var(--color-border);
 }
 
 .reply-form {
   margin-top: var(--space-md);
   padding: var(--space-md);
-  background: var(--color-gray-50);
+  background: rgba(241, 245, 249, 0.92);
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border-soft);
 }
 
 .reply-form-input {
   width: 100%;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-md);
   margin-bottom: var(--space-sm);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--color-border-soft);
+  border-radius: var(--radius-md);
   font-size: 0.875rem;
   line-height: 1.5;
   resize: vertical;
   min-height: 60px;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.reply-form-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-primary-lighter);
 }
 
 .reply-form-input::placeholder {
@@ -269,15 +264,15 @@ const replyCount = computed(() => props.comment.replies?.length ?? 0)
   padding: var(--space-xs) 0;
   border: none;
   background: none;
-  color: var(--color-primary);
+  color: var(--color-primary-dark);
   font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 700;
   transition: color var(--transition-fast);
 }
 
 .replies-toggle:hover {
-  color: var(--color-primary-dark);
+  color: var(--color-secondary);
   text-decoration: underline;
 }
 
@@ -294,7 +289,7 @@ const replyCount = computed(() => props.comment.replies?.length ?? 0)
   margin-top: var(--space-sm);
   margin-left: var(--space-xl);
   padding-left: var(--space-lg);
-  border-left: 3px solid var(--color-primary-lighter);
+  border-left: 3px dashed var(--color-primary-light);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
@@ -307,5 +302,6 @@ const replyCount = computed(() => props.comment.replies?.length ?? 0)
 .btn-ghost-sm--danger:hover {
   color: var(--color-danger) !important;
   background: rgba(239, 68, 68, 0.08) !important;
+  border-color: var(--color-border) !important;
 }
 </style>

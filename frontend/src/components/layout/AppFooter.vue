@@ -2,27 +2,30 @@
   <footer class="footer">
     <div class="footer-inner container">
       <div class="footer-grid">
-        <!-- Brand -->
         <div class="footer-brand">
           <router-link to="/" class="footer-logo">
-            <svg viewBox="0 0 32 32" width="24" height="24" fill="none">
-              <rect width="32" height="32" rx="6" fill="#42b883" />
-              <text x="16" y="22" text-anchor="middle" font-size="16" font-weight="700" fill="#fff">J</text>
+            <svg viewBox="0 0 44 44" width="40" height="40" fill="none">
+              <rect x="1" y="1" width="42" height="42" rx="16" fill="#F472B6" />
+              <path d="M28 10l4 6-4 6-4-6 4-6Z" fill="#FBBF24" />
+              <text x="16" y="28" text-anchor="middle" font-size="18" font-weight="800" fill="#fff">J</text>
             </svg>
-            <span>JobShare</span>
+            <span class="footer-logo-text">JobShare</span>
           </router-link>
-          <p class="footer-desc">Share your interview experiences, job offers, and career-related discussions with the community.</p>
+          <p class="footer-desc">A bright corner of the internet for interview stories, career notes, helpful tags, and your next opportunity.</p>
+          <div class="footer-badges">
+            <span class="badge">Posts</span>
+            <span class="badge footer-badge-alt">News</span>
+            <span class="badge footer-badge-alt-2">Jobs</span>
+          </div>
         </div>
 
-        <!-- Quick Links -->
         <div class="footer-col">
-          <h4>Platform</h4>
+          <h4>Explore</h4>
           <router-link to="/posts">Browse Posts</router-link>
-          <router-link to="/search">Search Jobs</router-link>
+          <router-link to="/jobs">Search Jobs</router-link>
           <router-link to="/news">Industry News</router-link>
         </div>
 
-        <!-- Account -->
         <div class="footer-col">
           <h4>Account</h4>
           <router-link to="/login">Sign In</router-link>
@@ -44,86 +47,125 @@ const currentYear = new Date().getFullYear()
 
 <style scoped>
 .footer {
-  background: var(--color-gray-800);
-  color: var(--color-gray-300);
+  position: relative;
   margin-top: auto;
+  padding: 0 0 var(--space-xl);
+  color: var(--color-foreground);
+}
+
+.footer::before {
+  content: '';
+  position: absolute;
+  inset: 18px 0 0;
+  border-top: var(--border-width) dashed var(--color-border);
+  opacity: 0.5;
 }
 
 .footer-inner {
-  padding-top: var(--space-2xl);
-  padding-bottom: var(--space-lg);
+  position: relative;
+  padding-top: var(--space-3xl);
 }
 
 .footer-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: var(--space-2xl);
-  padding-bottom: var(--space-xl);
-  border-bottom: 1px solid var(--color-gray-700);
+  grid-template-columns: 1.6fr 1fr 1fr;
+  gap: var(--space-xl);
+  padding: var(--space-2xl);
+  background: transparent;
+}
+
+.footer-brand {
+  max-width: 380px;
 }
 
 .footer-logo {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-sm);
-  text-decoration: none;
+  gap: var(--space-md);
   margin-bottom: var(--space-md);
 }
-.footer-logo span {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--color-white);
+
+.footer-logo-text {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--color-heading);
 }
 
 .footer-desc {
-  font-size: 13px;
-  line-height: 1.7;
-  color: var(--color-gray-400);
-  max-width: 300px;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-lg);
+}
+
+.footer-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.footer-badge-alt {
+  background: var(--color-tertiary);
+}
+
+.footer-badge-alt-2 {
+  background: var(--color-primary-lighter);
 }
 
 .footer-col h4 {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-white);
   margin-bottom: var(--space-md);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-heading);
 }
 
 .footer-col a {
-  display: block;
-  font-size: 13px;
-  color: var(--color-gray-400);
-  text-decoration: none;
-  padding: var(--space-xs) 0;
-  transition: color var(--transition-fast);
+  display: inline-flex;
+  width: fit-content;
+  padding: 8px 0;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  font-weight: 600;
 }
+
 .footer-col a:hover {
-  color: var(--color-primary-light);
+  color: var(--color-secondary);
+  transform: translateX(2px);
 }
 
 .footer-bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: var(--space-lg);
-  font-size: 12px;
-  color: var(--color-gray-500);
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-md) 0;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
 }
 
 .footer-built {
-  color: var(--color-gray-500);
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 700;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .footer-grid {
     grid-template-columns: 1fr;
-    gap: var(--space-xl);
   }
+
+  .footer-brand {
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .footer-grid {
+    padding: var(--space-xl);
+  }
+
   .footer-bottom {
     flex-direction: column;
-    gap: var(--space-sm);
     text-align: center;
   }
 }

@@ -11,6 +11,7 @@
       >
         <div class="confirm-backdrop" @click="handleCancel"></div>
         <div class="confirm-dialog card" @click.stop>
+          <div class="confirm-badge" :class="`confirm-badge--${variant}`" aria-hidden="true"></div>
           <h2 id="confirm-modal-title" class="confirm-title">{{ title }}</h2>
           <p v-if="message" class="confirm-message">{{ message }}</p>
           <div class="confirm-actions">
@@ -114,7 +115,7 @@ watch(
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.45);
   cursor: default;
 }
 
@@ -122,17 +123,38 @@ watch(
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 400px;
+  max-width: 440px;
   padding: var(--space-xl);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-soft);
   cursor: default;
+}
+
+.confirm-badge {
+  width: 56px;
+  height: 18px;
+  margin-bottom: var(--space-lg);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  transform: rotate(-8deg);
+}
+
+.confirm-badge--danger {
+  background: var(--color-danger);
+}
+
+.confirm-badge--primary {
+  background: var(--color-primary);
+}
+
+.confirm-badge--default {
+  background: var(--color-tertiary);
 }
 
 .confirm-title {
   margin: 0 0 var(--space-md);
-  font-size: 1.125rem;
-  font-weight: 600;
+  font-size: 1.55rem;
+  font-weight: 800;
   color: var(--color-heading);
 }
 
@@ -147,6 +169,7 @@ watch(
   display: flex;
   justify-content: flex-end;
   gap: var(--space-sm);
+  flex-wrap: wrap;
 }
 
 .confirm-spinner {
@@ -155,21 +178,10 @@ watch(
   height: 14px;
   margin-right: var(--space-xs);
   vertical-align: middle;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.35);
   border-top-color: #fff;
   border-radius: 50%;
   animation: confirm-spin 0.6s linear infinite;
-}
-
-.btn-danger {
-  background: var(--color-danger);
-  color: #fff;
-  border: none;
-}
-
-.btn-danger:hover:not(:disabled) {
-  background: #dc2626;
-  color: #fff;
 }
 
 @keyframes confirm-spin {
@@ -185,7 +197,7 @@ watch(
 
 .confirm-fade-enter-active .confirm-dialog,
 .confirm-fade-leave-active .confirm-dialog {
-  transition: transform 0.2s ease;
+  transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .confirm-fade-enter-from,
@@ -195,6 +207,12 @@ watch(
 
 .confirm-fade-enter-from .confirm-dialog,
 .confirm-fade-leave-to .confirm-dialog {
-  transform: scale(0.96);
+  transform: translateY(12px) scale(0.96);
+}
+
+@media (max-width: 640px) {
+  .confirm-actions .btn {
+    width: 100%;
+  }
 }
 </style>

@@ -1,12 +1,15 @@
 <template>
-  <div class="my-posts-view container">
-    <div class="my-posts-header">
-      <h1 class="page-title">My Posts</h1>
+  <div class="my-posts-view">
+    <div class="my-posts-toolbar">
+      <div>
+        <h1 class="page-title">My Posts</h1>
+        <p class="page-desc">Review, edit, or delete the posts you have shared.</p>
+      </div>
       <router-link :to="{ name: 'CreatePost' }" class="btn btn-primary">
         Create Post
       </router-link>
     </div>
-    <div v-if="loading" class="loading">Loading…</div>
+    <div v-if="loading" class="loading card">Loading…</div>
     <template v-else>
       <div v-if="myPosts.length" class="post-list">
         <article
@@ -48,7 +51,7 @@
           </div>
         </article>
       </div>
-      <div v-else class="empty-state">
+      <div v-else class="empty-state card">
         <p class="empty-state-title">You haven’t posted yet</p>
         <p class="empty-state-hint">Share your first post with the community.</p>
         <router-link :to="{ name: 'CreatePost' }" class="btn btn-primary">Create Post</router-link>
@@ -164,22 +167,27 @@ onMounted(() => {
 
 <style scoped>
 .my-posts-view {
-  padding: var(--space-lg) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
 }
 
-.my-posts-header {
+.my-posts-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-md);
-  margin-bottom: var(--space-lg);
 }
 
 .page-title {
-  margin: 0;
-  color: var(--color-heading);
-  font-size: 1.5rem;
+  margin: 0 0 var(--space-sm);
+  font-size: clamp(1.8rem, 2.8vw, 2.4rem);
+}
+
+.page-desc {
+  max-width: 48ch;
+  color: var(--color-text-secondary);
 }
 
 .post-list {
@@ -190,7 +198,10 @@ onMounted(() => {
 
 .post-card {
   padding: var(--space-lg);
-  transition: box-shadow var(--transition-fast);
+  box-shadow: var(--shadow-soft);
+  transition:
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal);
 }
 
 .post-card--clickable {
@@ -198,7 +209,8 @@ onMounted(() => {
 }
 
 .post-card:hover {
-  box-shadow: var(--shadow-md);
+  transform: rotate(-1deg) translateY(-3px);
+  box-shadow: var(--shadow-pink);
 }
 
 .post-card-title {
@@ -208,11 +220,10 @@ onMounted(() => {
 
 .post-card-title a {
   color: var(--color-heading);
-  text-decoration: none;
 }
 
 .post-card-title a:hover {
-  color: var(--color-primary);
+  color: var(--color-secondary);
 }
 
 .post-card-excerpt {
@@ -232,7 +243,7 @@ onMounted(() => {
   align-items: center;
   gap: var(--space-md);
   margin-bottom: var(--space-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
 }
 
@@ -246,13 +257,14 @@ onMounted(() => {
 
 .post-card-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-sm);
   padding-top: var(--space-md);
-  border-top: 1px solid var(--color-border);
+  border-top: var(--border-width) dashed var(--color-border-soft);
 }
 
 .post-card-delete {
-  color: var(--color-text-muted);
+  color: var(--color-danger);
 }
 
 .post-card-delete:hover {
@@ -260,7 +272,7 @@ onMounted(() => {
 }
 
 .loading {
-  padding: var(--space-xl);
+  padding: var(--space-2xl);
   text-align: center;
   color: var(--color-text-secondary);
 }
@@ -268,9 +280,6 @@ onMounted(() => {
 .empty-state {
   padding: var(--space-2xl);
   text-align: center;
-  background: var(--color-gray-50);
-  border-radius: var(--radius-lg);
-  border: 1px dashed var(--color-border);
 }
 
 .empty-state-title {
@@ -289,6 +298,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: var(--space-md);
   margin-top: var(--space-xl);
 }
@@ -296,5 +306,15 @@ onMounted(() => {
 .page-info {
   color: var(--color-text-secondary);
   font-size: 0.875rem;
+}
+
+@media (max-width: 640px) {
+  .my-posts-toolbar .btn {
+    width: 100%;
+  }
+
+  .post-card-actions .btn {
+    width: 100%;
+  }
 }
 </style>

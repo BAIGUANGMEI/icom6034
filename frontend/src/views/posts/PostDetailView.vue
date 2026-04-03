@@ -1,10 +1,11 @@
 <template>
-  <div class="post-detail-view container">
-    <div v-if="loading" class="loading">Loading…</div>
+  <div class="post-detail-view">
+    <div v-if="loading" class="loading card">Loading…</div>
     <template v-else-if="post">
       <div class="post-detail-layout">
         <div class="post-detail-main">
           <article class="card post-detail">
+            <span class="detail-chip">Story detail</span>
             <h1 class="post-title">{{ post.title }}</h1>
             <div class="post-meta">
               <router-link
@@ -455,7 +456,8 @@ async function deleteComment(id) {
 
 <style scoped>
 .post-detail-view {
-  padding: var(--space-lg) var(--space-md);
+  display: flex;
+  flex-direction: column;
 }
 
 .post-detail-layout {
@@ -477,13 +479,12 @@ async function deleteComment(id) {
 
 .post-sidebar {
   padding: var(--space-lg);
+  box-shadow: var(--shadow-soft);
 }
 
 .post-sidebar-title {
   margin: 0 0 var(--space-xs);
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--color-heading);
+  font-size: 1.35rem;
 }
 
 .post-sidebar-desc {
@@ -500,7 +501,7 @@ async function deleteComment(id) {
 .post-sidebar-section {
   margin-bottom: var(--space-lg);
   padding-bottom: var(--space-lg);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width) dashed var(--color-border-soft);
 }
 
 .post-sidebar-section:last-child {
@@ -519,20 +520,19 @@ async function deleteComment(id) {
 
 .post-sidebar-section-title {
   margin: 0;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--color-heading);
+  font-size: 1rem;
 }
 
 .post-sidebar-more {
   flex-shrink: 0;
   font-size: 0.8125rem;
-  color: var(--color-primary);
-  text-decoration: none;
+  color: var(--color-primary-dark);
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 700;
 }
 
 .post-sidebar-more:hover {
-  text-decoration: underline;
+  color: var(--color-secondary);
 }
 
 .post-sidebar-hint,
@@ -544,8 +544,6 @@ async function deleteComment(id) {
 .post-sidebar-code {
   font-size: 0.75rem;
   padding: 0.1em 0.35em;
-  background: var(--color-gray-50);
-  border-radius: var(--radius-sm);
 }
 
 .post-sidebar-error {
@@ -564,7 +562,7 @@ async function deleteComment(id) {
 .post-sidebar-item {
   margin-bottom: var(--space-md);
   padding-bottom: var(--space-md);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width) dashed var(--color-border-soft);
 }
 
 .post-sidebar-item:last-child {
@@ -576,14 +574,13 @@ async function deleteComment(id) {
 .post-sidebar-link {
   display: block;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 700;
   line-height: 1.4;
   color: var(--color-heading);
-  text-decoration: none;
 }
 
 .post-sidebar-link:hover {
-  color: var(--color-primary);
+  color: var(--color-secondary);
 }
 
 .post-sidebar-meta {
@@ -595,7 +592,7 @@ async function deleteComment(id) {
 
 .post-sidebar-job-title {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-heading);
   line-height: 1.3;
 }
@@ -612,7 +609,7 @@ async function deleteComment(id) {
 }
 
 .loading {
-  padding: var(--space-xl);
+  padding: var(--space-2xl);
   text-align: center;
   color: var(--color-text-secondary);
 }
@@ -620,12 +617,27 @@ async function deleteComment(id) {
 .post-detail {
   padding: var(--space-xl);
   margin-bottom: var(--space-xl);
+  box-shadow: var(--shadow-soft);
+}
+
+.detail-chip {
+  display: inline-flex;
+  margin-bottom: var(--space-md);
+  padding: 8px 14px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-tertiary);
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .post-title {
   margin-bottom: var(--space-sm);
   color: var(--color-heading);
-  font-size: 1.75rem;
+  font-size: clamp(2rem, 3vw, 3rem);
 }
 
 .post-meta {
@@ -639,11 +651,12 @@ async function deleteComment(id) {
 }
 
 .post-meta .author {
-  color: var(--color-primary);
-  text-decoration: none;
+  color: var(--color-primary-dark);
+  font-weight: 700;
 }
 
 .post-meta .author:hover {
+  color: var(--color-secondary);
   text-decoration: underline;
 }
 
@@ -674,8 +687,10 @@ async function deleteComment(id) {
 .prose-content :deep(img) {
   max-width: 100%;
   height: auto;
-  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
   margin: var(--space-md) 0;
+  box-shadow: var(--shadow-soft);
 }
 
 .prose-content :deep(h2) {
@@ -686,8 +701,9 @@ async function deleteComment(id) {
 .post-actions {
   margin-top: var(--space-xl);
   padding-top: var(--space-lg);
-  border-top: 1px solid var(--color-border);
+  border-top: var(--border-width) dashed var(--color-border-soft);
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-md);
 }
 
@@ -698,6 +714,7 @@ async function deleteComment(id) {
 .comments-section {
   padding: var(--space-xl);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
 }
 
 .comments-section-header {
@@ -706,14 +723,12 @@ async function deleteComment(id) {
   gap: var(--space-sm);
   margin-bottom: var(--space-lg);
   padding-bottom: var(--space-md);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width) dashed var(--color-border-soft);
 }
 
 .comments-section-title {
   margin: 0;
   font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-heading);
 }
 
 .comments-count-badge {
@@ -723,38 +738,33 @@ async function deleteComment(id) {
   min-width: 1.5rem;
   height: 1.5rem;
   padding: 0 var(--space-xs);
-  background: var(--color-primary-lighter);
-  color: var(--color-primary-dark);
+  background: var(--color-quaternary);
+  color: var(--color-foreground);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-full);
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 800;
 }
 
 .comment-form {
   margin-bottom: var(--space-xl);
   padding: var(--space-lg);
-  background: var(--color-gray-50);
+  background: rgba(241, 245, 249, 0.9);
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border-soft);
 }
 
 .comment-form-input {
   width: 100%;
   padding: var(--space-md);
   margin-bottom: var(--space-md);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border-soft);
   border-radius: var(--radius-md);
   font-size: 0.9375rem;
   line-height: 1.5;
   resize: vertical;
   min-height: 80px;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.comment-form-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-lighter);
 }
 
 .comment-form-input::placeholder {
@@ -764,6 +774,7 @@ async function deleteComment(id) {
 .comment-form-actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .comment-login-hint {
@@ -772,8 +783,9 @@ async function deleteComment(id) {
   text-align: center;
   color: var(--color-text-muted);
   font-size: 0.9375rem;
-  background: var(--color-gray-50);
+  background: rgba(241, 245, 249, 0.8);
   border-radius: var(--radius-md);
+  border: var(--border-width) dashed var(--color-border-soft);
 }
 
 .comment-list {
@@ -784,7 +796,7 @@ async function deleteComment(id) {
 
 .comment-list > :deep(.comment-item) {
   padding: 0;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width) dashed var(--color-border-soft);
 }
 
 .comment-list > :deep(.comment-item:last-child) {
@@ -794,9 +806,9 @@ async function deleteComment(id) {
 .comments-empty {
   padding: var(--space-2xl) var(--space-lg);
   text-align: center;
-  background: var(--color-gray-50);
+  background: rgba(241, 245, 249, 0.82);
   border-radius: var(--radius-md);
-  border: 1px dashed var(--color-border);
+  border: var(--border-width) dashed var(--color-border-soft);
 }
 
 .comments-empty-text {
@@ -809,5 +821,12 @@ async function deleteComment(id) {
   margin: 0;
   color: var(--color-text-muted);
   font-size: 0.8125rem;
+}
+
+@media (max-width: 640px) {
+  .post-actions .btn,
+  .comment-form-actions .btn {
+    width: 100%;
+  }
 }
 </style>
