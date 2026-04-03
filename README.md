@@ -4,12 +4,12 @@ A web-based platform where job seekers can share interview experiences, job offe
 
 ## Main Features
 
-- **Posts** — Create, edit, delete posts with **rich text** (TipTap editor) and **local image uploads**; **search** (keyword + tag) and pagination on the posts list page.
+- **Posts** — Create, edit, delete posts with **rich text** (TipTap editor) and **local image uploads**; **search** by title + tag and pagination on the posts list page.
 - **Comments** — Nested replies on posts; delete cascades to child comments.
 - **My Posts** — List and manage your own posts with pagination; confirmation modal for delete.
 - **User profiles** — View profile and posts; edit your profile when logged in.
 - **Jobs** — Search job listings via **JSearch API** (RapidAPI) with query, country, date posted, and pagination.
-- **News** — Industry news (News API, when configured).
+- **News** — Technology headlines and keyword-based article search via News API (when configured).
 
 ## Tech Stack
 
@@ -27,8 +27,8 @@ A web-based platform where job seekers can share interview experiences, job offe
 ## External APIs (called directly from frontend)
 
 - **JSearch API** (RapidAPI) — Job search used by the **Jobs** page (`/jobs`); base URL and API key in `.env`.
-- **News API** (https://newsapi.org/) — Job market news and industry trends.  
-- Post search (keyword + tag) is on the **Posts** page (`/posts`), via backend `/api/search/posts`.
+- **News API** (https://newsapi.org/) — Used by the **News** page (`/news`) for top headlines and keyword search.
+- Post search (title + tag) is on the **Posts** page (`/posts`), via backend `/api/search/posts`.
 
 ## Prerequisites
 
@@ -161,7 +161,7 @@ npm run dev
 
 - Backend API: Open http://localhost:8000/api/posts — should return a JSON response.
 - API Documentation: Open http://localhost:8000/api/documentation — Swagger UI with all endpoints.
-- Frontend App: Open http://localhost:5173 — homepage, Posts (with search), Jobs (`/jobs`), News (with API key).
+- Frontend App: Open http://localhost:5173 — homepage, Posts (title/tag search), Jobs (`/jobs`), News (`/news`, requires API key).
 
 ## API Endpoints
 
@@ -175,17 +175,17 @@ npm run dev
 | GET    | `/api/posts/{id}`              | Get single post             |
 | GET    | `/api/tags`                    | List all tags               |
 | GET    | `/api/tags/{id}`               | Get tag with related posts  |
-| GET    | `/api/search/posts`            | Search posts                |
+| GET    | `/api/search/posts`            | Search posts by title/tag   |
 | GET    | `/api/posts/{postId}/comments` | Get comments for a post     |
 | GET    | `/api/users/{id}/profile`      | Get user profile with stats |
 | GET    | `/api/users/{id}/posts`        | Get posts by a user         |
 
 ### External APIs (called from frontend)
 
-| Service   | Endpoint / usage                                      | Description              |
-| --------- | ----------------------------------------------------- | ------------------------ |
-| JSearch   | `VITE_JSEARCH_API_URL` + `/search` (query, page, country, date_posted) | Job search (Jobs page)   |
-| News API  | `https://newsapi.org/v2/top-headlines`, `/everything`  | Headlines and search     |
+| Service   | Endpoint / usage | Description |
+| --------- | ---------------- | ----------- |
+| JSearch   | `VITE_JSEARCH_API_URL` + `/search` (query, page, country, date_posted) | Job search on the Jobs page |
+| News API  | `https://newsapi.org/v2/top-headlines`, `https://newsapi.org/v2/everything` | Top headlines and keyword search on the News page |
 
 ### Protected Routes (require Bearer Token)
 

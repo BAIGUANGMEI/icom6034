@@ -11,13 +11,24 @@ const newsClient = axios.create({
   },
 })
 
+function compactParams(params = {}) {
+  return Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== '' && value != null),
+  )
+}
+
 export const newsApi = {
   /**
    * Get top headlines.
    */
   getHeadlines(params = {}) {
     return newsClient.get('/top-headlines', {
-      params: { country: 'us', category: 'business', ...params },
+      params: compactParams({
+        country: 'us',
+        category: 'technology',
+        pageSize: 12,
+        ...params,
+      }),
     })
   },
 
@@ -25,6 +36,17 @@ export const newsApi = {
    * Search news articles by keyword.
    */
   search(params = {}) {
-    return newsClient.get('/everything', { params })
+    return newsClient.get(
+      '/everything',
+      {
+        params: compactParams({
+          q: 'technology',
+          language: 'en',
+          sortBy: 'publishedAt',
+          pageSize: 12,
+          ...params,
+        }),
+      },
+    )
   },
 }

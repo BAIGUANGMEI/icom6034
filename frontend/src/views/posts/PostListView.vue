@@ -4,11 +4,11 @@
     <div class="list-actions">
       <form class="search-form" @submit.prevent="runSearch">
         <input
-          v-model="searchKeyword"
+          v-model="searchTitle"
           type="text"
           class="form-input search-input"
-          placeholder="Search by keyword…"
-          aria-label="Search posts by keyword"
+          placeholder="Search by title..."
+          aria-label="Search posts by title"
         />
         <input
           v-model="searchTag"
@@ -108,12 +108,12 @@ const postStore = usePostStore()
 const authStore = useAuthStore()
 const { posts, loading, pagination } = storeToRefs(postStore)
 
-const searchKeyword = ref('')
+const searchTitle = ref('')
 const searchTag = ref('')
 
 const currentPage = computed(() => pagination.value.meta?.current_page ?? 1)
 const isSearchActive = computed(
-  () => searchKeyword.value.trim() !== '' || searchTag.value.trim() !== ''
+  () => searchTitle.value.trim() !== '' || searchTag.value.trim() !== ''
 )
 
 /** Strip HTML and take first 150 chars for list excerpt */
@@ -139,17 +139,17 @@ function goToPost(id) {
 }
 
 function runSearch() {
-  const keyword = searchKeyword.value.trim()
+  const title = searchTitle.value.trim()
   const tag = searchTag.value.trim()
-  if (keyword || tag) {
-    postStore.searchPosts({ keyword: keyword || undefined, tag: tag || undefined, page: 1 })
+  if (title || tag) {
+    postStore.searchPosts({ title: title || undefined, tag: tag || undefined, page: 1 })
   } else {
     postStore.fetchPosts()
   }
 }
 
 function clearSearch() {
-  searchKeyword.value = ''
+  searchTitle.value = ''
   searchTag.value = ''
   postStore.fetchPosts()
 }
@@ -157,7 +157,7 @@ function clearSearch() {
 function goPage(page) {
   if (isSearchActive.value) {
     postStore.searchPosts({
-      keyword: searchKeyword.value.trim() || undefined,
+      title: searchTitle.value.trim() || undefined,
       tag: searchTag.value.trim() || undefined,
       page,
     })

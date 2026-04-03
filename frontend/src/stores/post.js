@@ -32,7 +32,7 @@ export const usePostStore = defineStore('post', () => {
     }
   }
 
-  /** Search posts by keyword and/or tag; same pagination shape as fetchPosts */
+  /** Search posts by title and/or tag; same pagination shape as fetchPosts */
   async function searchPosts(params = {}) {
     loading.value = true
     try {

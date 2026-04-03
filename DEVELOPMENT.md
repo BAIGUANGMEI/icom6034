@@ -21,8 +21,8 @@
 
 外部 API (前端直接调用，不经过后端):
   • JSearch (RapidAPI)  → src/api/jobs.js   — Jobs 页面职位搜索
-  • News API           → src/api/news.js
-  • src/api/search.js  — 仅调用后端 /search/posts，搜索入口在 Posts 列表页（无独立 Search 页）
+  • News API           → src/api/news.js   — News 页面头条 + 关键词检索
+  • src/api/search.js  — 仅调用后端 /search/posts，搜索入口在 Posts 列表页（按标题/标签搜索，无独立 Search 页）
 ```
 
 ---
@@ -258,13 +258,14 @@ frontend/src/
 │   ├── posts.js            # postApi: getAll, getOne, create, update, delete, getMyPosts, uploadImage
 │   ├── comments.js         # commentApi: getByPost, create, delete
 │   ├── tags.js             # tagApi: getAll, getOne
-│   ├── search.js           # searchApi: searchPosts(后端，仅帖子搜索)
+│   ├── search.js           # searchApi: searchPosts(后端，仅帖子标题/标签搜索)
 │   ├── jobs.js             # jobsApi: searchJobs (JSearch RapidAPI，Jobs 页)
 │   └── news.js             # newsApi: getHeadlines, search (News API 直接调用)
 │
 ├── stores/                 # Pinia 状态管理
 │   ├── auth.js             # user, token, isAuthenticated, login, logout...
-│   └── post.js             # posts, currentPost, myPosts, loading...
+│   ├── post.js             # posts, currentPost, myPosts, loading...
+│   └── news.js             # articles, loading, error, fetchHeadlines, searchArticles
 │
 ├── router/
 │   └── index.js            # 路由 + 导航守卫 (requiresAuth / guest)
@@ -275,7 +276,7 @@ frontend/src/
 │   │   ├── LoginView.vue       # 登录页（含输入验证、密码可见切换）
 │   │   └── RegisterView.vue    # 注册页（含密码强度指示器、成功动画）
 │   ├── posts/
-│   │   ├── PostListView.vue   # 帖子列表（含搜索 keyword/tag、整卡可点击进详情）
+│   │   ├── PostListView.vue   # 帖子列表（含标题/tag 搜索、整卡可点击进详情）
 │   │   ├── PostDetailView.vue # 帖子详情、评论树、楼中楼、编辑/删除
 │   │   ├── PostCreateView.vue # 发帖（富文本 + 图片上传）
 │   │   ├── PostEditView.vue
@@ -283,7 +284,7 @@ frontend/src/
 │   ├── profile/
 │   │   └── ProfileView.vue    # 用户主页（头像、统计、帖子摘要、编辑资料弹窗）
 │   ├── news/
-│   │   └── NewsView.vue
+│   │   └── NewsView.vue       # 新闻页（top headlines + keyword search）
 │   └── jobs/
 │       └── JobsView.vue       # 职位搜索（JSearch：query/country/date_posted/分页）
 │
@@ -381,7 +382,7 @@ async function fetchPosts(params = {}) {
 **注意事项：**
 
 - **后端 API** 通过 `src/api/index.js` 统一 Axios 实例调用（自动带 Token）
-- **外部 API（JSearch、News）** 使用各自独立的 Axios 实例，不走后端代理；JSearch 用于 Jobs 页（`src/api/jobs.js`）；帖子搜索仅用后端 `searchApi.searchPosts`
+- **外部 API（JSearch、News）** 使用各自独立的 Axios 实例，不走后端代理；JSearch 用于 Jobs 页（`src/api/jobs.js`）；News 页通过 `src/api/news.js` + `stores/news.js` 调用 News API；帖子搜索仅用后端 `searchApi.searchPosts`
 - API 响应数据在 `response.data` 中，Laravel 的分页数据在 `response.data.data` 中
 - 不要直接在组件中调用 `axios`，必须通过 `src/api/` 下的模块
 
@@ -645,7 +646,7 @@ FRONTEND_URL=http://localhost:5173   # 前端地址（CORS 用）
 
 ```dotenv
 VITE_API_BASE_URL=http://localhost:8000/api              # 后端 API 地址
-VITE_NEWS_API_KEY=                                        # newsapi.org 密钥
+VITE_NEWS_API_KEY=                                        # newsapi.org 密钥（News 页面头条/检索必填）
 VITE_JSEARCH_API_URL=https://jsearch.p.rapidapi.com      # JSearch (RapidAPI) 职位搜索 base URL
 VITE_JSEARCH_RAPIDAPI_KEY=                                # JSearch 的 x-rapidapi-key
 ```

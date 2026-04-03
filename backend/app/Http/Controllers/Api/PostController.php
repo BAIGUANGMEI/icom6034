@@ -232,10 +232,10 @@ class PostController extends Controller
      */
     #[OA\Get(
         path: '/api/search/posts',
-        summary: 'Search posts by keyword or tag',
+        summary: 'Search posts by title or tag',
         tags: ['Posts'],
         parameters: [
-            new OA\Parameter(name: 'keyword', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Search keyword'),
+            new OA\Parameter(name: 'title', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Search post title'),
             new OA\Parameter(name: 'tag', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Filter by tag name'),
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer'), description: 'Page number'),
         ],
@@ -255,19 +255,17 @@ class PostController extends Controller
     {
         $query = Post::with(['user', 'tags'])->withCount('comments');
 
-        // Optional: filter by keyword in title or content
-        if ($request->filled('keyword')) {
-            $keyword = $request->keyword;
-            $query->where(function ($q) use ($keyword) {
-                $q->where('title', 'like', "%{$keyword}%")
-                    ->orWhere('content', 'like', "%{$keyword}%");
-            });
+        // Filter by title; keep keyword as a backward-compatible alias.
+        $title = $request->input('title', $request->input('keyword'));
+
+        if (filled($title)) {
+            $query->where('title', 'like', "%{$title}%");
         }
 
-        // Optional: filter by tag name
+        // Optional: filter by tag name (supports partial matches)
         if ($request->filled('tag')) {
             $query->whereHas('tags', function ($q) use ($request) {
-                $q->where('name', 'like', $request->tag);
+                $q->where('name', 'like', "%{$request->tag}%");
             });
         }
 
