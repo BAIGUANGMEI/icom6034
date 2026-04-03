@@ -2,78 +2,152 @@
   <div class="post-detail-view container">
     <div v-if="loading" class="loading">Loading…</div>
     <template v-else-if="post">
-      <article class="card post-detail">
-        <h1 class="post-title">{{ post.title }}</h1>
-        <div class="post-meta">
-          <router-link
-            v-if="post.user"
-            :to="{ name: 'Profile', params: { id: post.user.id } }"
-            class="author"
-          >
-            {{ post.user.name }}
-          </router-link>
-          <span class="date">{{ formatDate(post.created_at) }}</span>
-          <span v-if="post.comments_count != null" class="comments-count">
-            {{ post.comments_count }} comment(s)
-          </span>
+      <div class="post-detail-layout">
+        <div class="post-detail-main">
+          <article class="card post-detail">
+            <h1 class="post-title">{{ post.title }}</h1>
+            <div class="post-meta">
+              <router-link
+                v-if="post.user"
+                :to="{ name: 'Profile', params: { id: post.user.id } }"
+                class="author"
+              >
+                {{ post.user.name }}
+              </router-link>
+              <span class="date">{{ formatDate(post.created_at) }}</span>
+              <span v-if="post.comments_count != null" class="comments-count">
+                {{ post.comments_count }} comment(s)
+              </span>
+            </div>
+            <div v-if="post.tags?.length" class="post-tags">
+              <span v-for="tag in post.tags" :key="tag.id" class="badge">{{ tag.name }}</span>
+            </div>
+            <div class="post-body prose-content" v-html="post.content"></div>
+            <div v-if="isAuthor" class="post-actions">
+              <router-link :to="{ name: 'EditPost', params: { id: post.id } }" class="btn btn-outline btn-sm">
+                Edit
+              </router-link>
+              <button type="button" class="btn btn-ghost btn-sm danger" @click="showDeleteModal = true">Delete</button>
+            </div>
+          </article>
+          <section class="comments-section card">
+            <div class="comments-section-header">
+              <h2 class="comments-section-title">Comments</h2>
+              <span v-if="post.comments_count != null" class="comments-count-badge">{{ post.comments_count }}</span>
+            </div>
+            <div v-if="authStore.isAuthenticated" class="comment-form">
+              <textarea
+                v-model="newComment"
+                placeholder="Share your thoughts…"
+                rows="3"
+                class="comment-form-input"
+              />
+              <div class="comment-form-actions">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  :disabled="!newComment.trim() || submittingComment"
+                  @click="submitComment"
+                >
+                  {{ submittingComment ? 'Submitting…' : 'Post comment' }}
+                </button>
+              </div>
+            </div>
+            <p v-else class="comment-login-hint">Log in to leave a comment.</p>
+            <ul v-if="commentTree.length" class="comment-list">
+              <CommentItem
+                v-for="c in commentTree"
+                :key="c.id"
+                :comment="c"
+                :replying-to-id="replyingToId"
+                :reply-content="replyContent"
+                :submitting-reply="submittingReply"
+                :can-delete-comment="canDeleteComment"
+                :format-date="formatDate"
+                @reply-to="startReply"
+                @submit-reply="submitReply"
+                @cancel-reply="cancelReply"
+                @update:replyContent="replyContent = $event"
+                @delete="deleteComment"
+              />
+            </ul>
+            <div v-else class="comments-empty">
+              <p class="comments-empty-text">No comments yet.</p>
+              <p class="comments-empty-hint">Be the first to share your thoughts.</p>
+            </div>
+          </section>
         </div>
-        <div v-if="post.tags?.length" class="post-tags">
-          <span v-for="tag in post.tags" :key="tag.id" class="badge">{{ tag.name }}</span>
-        </div>
-        <div class="post-body prose-content" v-html="post.content"></div>
-        <div v-if="isAuthor" class="post-actions">
-          <router-link :to="{ name: 'EditPost', params: { id: post.id } }" class="btn btn-outline btn-sm">
-            Edit
-          </router-link>
-          <button type="button" class="btn btn-ghost btn-sm danger" @click="showDeleteModal = true">Delete</button>
-        </div>
-      </article>
-      <section class="comments-section card">
-        <div class="comments-section-header">
-          <h2 class="comments-section-title">Comments</h2>
-          <span v-if="post.comments_count != null" class="comments-count-badge">{{ post.comments_count }}</span>
-        </div>
-        <div v-if="authStore.isAuthenticated" class="comment-form">
-          <textarea
-            v-model="newComment"
-            placeholder="Share your thoughts…"
-            rows="3"
-            class="comment-form-input"
-          />
-          <div class="comment-form-actions">
-            <button
-              type="button"
-              class="btn btn-primary"
-              :disabled="!newComment.trim() || submittingComment"
-              @click="submitComment"
-            >
-              {{ submittingComment ? 'Submitting…' : 'Post comment' }}
-            </button>
-          </div>
-        </div>
-        <p v-else class="comment-login-hint">Log in to leave a comment.</p>
-        <ul v-if="commentTree.length" class="comment-list">
-          <CommentItem
-            v-for="c in commentTree"
-            :key="c.id"
-            :comment="c"
-            :replying-to-id="replyingToId"
-            :reply-content="replyContent"
-            :submitting-reply="submittingReply"
-            :can-delete-comment="canDeleteComment"
-            :format-date="formatDate"
-            @reply-to="startReply"
-            @submit-reply="submitReply"
-            @cancel-reply="cancelReply"
-            @update:replyContent="replyContent = $event"
-            @delete="deleteComment"
-          />
-        </ul>
-        <div v-else class="comments-empty">
-          <p class="comments-empty-text">No comments yet.</p>
-          <p class="comments-empty-hint">Be the first to share your thoughts.</p>
-        </div>
-      </section>
+
+        <aside class="card post-sidebar" aria-label="Related news and jobs by post tags">
+          <h2 class="post-sidebar-title">Related</h2>
+          <p class="post-sidebar-desc text-muted">
+            <template v-if="tagSearchQuery">
+              Matched to tags: <strong class="post-sidebar-query">{{ tagSearchQuery }}</strong>
+            </template>
+            <template v-else>
+              Add tags to this post to see related news and jobs here.
+            </template>
+          </p>
+
+          <section class="post-sidebar-section">
+            <div class="post-sidebar-section-head">
+              <h3 class="post-sidebar-section-title">News</h3>
+              <router-link :to="{ name: 'News' }" class="post-sidebar-more">Open News</router-link>
+            </div>
+            <div v-if="!hasNewsApiKey" class="post-sidebar-hint text-muted">
+              Set <code class="post-sidebar-code">VITE_NEWS_API_KEY</code> in <code class="post-sidebar-code">.env</code> to load articles.
+            </div>
+            <div v-else-if="sidebarNewsLoading" class="post-sidebar-loading text-muted">Loading news…</div>
+            <p v-else-if="sidebarNewsError" class="post-sidebar-error">{{ sidebarNewsError }}</p>
+            <p v-else-if="!tagSearchQuery" class="post-sidebar-hint text-muted">—</p>
+            <p v-else-if="!sidebarArticles.length" class="post-sidebar-hint text-muted">No articles for these tags.</p>
+            <ul v-else class="post-sidebar-list">
+              <li v-for="(article, index) in sidebarArticles" :key="article.url || index" class="post-sidebar-item">
+                <a
+                  v-if="article.url"
+                  :href="article.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="post-sidebar-link"
+                >
+                  {{ article.title || 'Untitled' }}
+                </a>
+                <span v-if="article.source?.name" class="post-sidebar-meta">{{ article.source.name }}</span>
+              </li>
+            </ul>
+          </section>
+
+          <section class="post-sidebar-section">
+            <div class="post-sidebar-section-head">
+              <h3 class="post-sidebar-section-title">Jobs</h3>
+              <router-link :to="{ name: 'Jobs' }" class="post-sidebar-more">Open Jobs</router-link>
+            </div>
+            <div v-if="!hasJobsApiKey" class="post-sidebar-hint text-muted">
+              Set <code class="post-sidebar-code">VITE_JSEARCH_RAPIDAPI_KEY</code> in <code class="post-sidebar-code">.env</code> to load jobs.
+            </div>
+            <div v-else-if="sidebarJobsLoading" class="post-sidebar-loading text-muted">Loading jobs…</div>
+            <p v-else-if="sidebarJobsError" class="post-sidebar-error">{{ sidebarJobsError }}</p>
+            <p v-else-if="!tagSearchQuery" class="post-sidebar-hint text-muted">—</p>
+            <p v-else-if="!sidebarJobs.length" class="post-sidebar-hint text-muted">No jobs for these tags.</p>
+            <ul v-else class="post-sidebar-list">
+              <li v-for="(job, index) in sidebarJobs" :key="job.job_id || index" class="post-sidebar-item post-sidebar-item--job">
+                <div class="post-sidebar-job-title">{{ job.job_title || 'Untitled' }}</div>
+                <div v-if="job.employer_name" class="post-sidebar-meta">{{ job.employer_name }}</div>
+                <p v-if="job.job_description" class="post-sidebar-job-desc">{{ truncateText(job.job_description, 120) }}</p>
+                <a
+                  v-if="job.job_apply_link"
+                  :href="job.job_apply_link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn btn-primary btn-sm post-sidebar-apply"
+                >
+                  Apply
+                </a>
+              </li>
+            </ul>
+          </section>
+        </aside>
+      </div>
     </template>
     <p v-else class="text-muted">Post not found.</p>
 
@@ -95,6 +169,7 @@
 /**
  * Post detail page: shows full post (title, author, date, tags, HTML content), edit/delete for author.
  * Comments: nested (reply to comment); add root comment or reply (if logged in), delete own. Content v-html.
+ * Sidebar: News API + JSearch jobs auto-queried from post tag names.
  */
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -102,6 +177,8 @@ import { storeToRefs } from 'pinia'
 import { usePostStore } from '@/stores/post'
 import { useAuthStore } from '@/stores/auth'
 import { commentApi } from '@/api/comments'
+import { newsApi } from '@/api/news'
+import { searchJobs } from '@/api/jobs'
 import CommentItem from '@/components/CommentItem.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 
@@ -121,6 +198,28 @@ const replyContent = ref('')
 const submittingReply = ref(false)
 const showDeleteModal = ref(false)
 const deleting = ref(false)
+
+const sidebarArticles = ref([])
+const sidebarJobs = ref([])
+const sidebarNewsLoading = ref(false)
+const sidebarJobsLoading = ref(false)
+const sidebarNewsError = ref('')
+const sidebarJobsError = ref('')
+let sidebarFetchSeq = 0
+
+const hasNewsApiKey = computed(() => Boolean(import.meta.env.VITE_NEWS_API_KEY))
+const hasJobsApiKey = computed(() => Boolean(import.meta.env.VITE_JSEARCH_RAPIDAPI_KEY))
+
+/** Space-joined tag names (max 5) for external news/job search */
+const tagSearchQuery = computed(() => {
+  const tags = post.value?.tags
+  if (!tags?.length) return ''
+  return tags
+    .map((t) => (typeof t.name === 'string' ? t.name.trim() : ''))
+    .filter(Boolean)
+    .slice(0, 5)
+    .join(' ')
+})
 
 /** Build tree from flat list: root comments with recursive .replies */
 const commentTree = computed(() => {
@@ -158,6 +257,87 @@ function formatDate(val) {
   })
 }
 
+function truncateText(text, len) {
+  if (!text) return ''
+  const str = typeof text === 'string' ? text : String(text)
+  return str.length > len ? str.slice(0, len) + '…' : str
+}
+
+async function loadSidebarByTags(tags, seq) {
+  const kw = (tags || [])
+    .map((t) => (typeof t.name === 'string' ? t.name.trim() : ''))
+    .filter(Boolean)
+    .slice(0, 5)
+    .join(' ')
+
+  if (!kw) {
+    sidebarArticles.value = []
+    sidebarJobs.value = []
+    sidebarNewsError.value = ''
+    sidebarJobsError.value = ''
+    sidebarNewsLoading.value = false
+    sidebarJobsLoading.value = false
+    return
+  }
+
+  sidebarNewsLoading.value = hasNewsApiKey.value
+  sidebarJobsLoading.value = hasJobsApiKey.value
+  sidebarNewsError.value = ''
+  sidebarJobsError.value = ''
+
+  const tasks = []
+
+  if (hasNewsApiKey.value) {
+    tasks.push(
+      newsApi
+        .search({ q: kw, pageSize: 5 })
+        .then(({ data }) => {
+          if (seq !== sidebarFetchSeq) return
+          sidebarArticles.value = data?.articles ?? []
+          sidebarNewsError.value = ''
+        })
+        .catch((err) => {
+          if (seq !== sidebarFetchSeq) return
+          sidebarArticles.value = []
+          sidebarNewsError.value =
+            err.response?.data?.message || err.message || 'Could not load news.'
+        })
+        .finally(() => {
+          if (seq === sidebarFetchSeq) sidebarNewsLoading.value = false
+        }),
+    )
+  } else {
+    sidebarArticles.value = []
+    sidebarNewsLoading.value = false
+  }
+
+  if (hasJobsApiKey.value) {
+    tasks.push(
+      searchJobs({ query: `${kw} jobs`, page: 1, num_pages: 1 })
+        .then(({ data }) => {
+          if (seq !== sidebarFetchSeq) return
+          const list = data?.data ?? []
+          sidebarJobs.value = list.slice(0, 5)
+          sidebarJobsError.value = ''
+        })
+        .catch((err) => {
+          if (seq !== sidebarFetchSeq) return
+          sidebarJobs.value = []
+          sidebarJobsError.value =
+            err.response?.data?.message || err.message || 'Could not load jobs.'
+        })
+        .finally(() => {
+          if (seq === sidebarFetchSeq) sidebarJobsLoading.value = false
+        }),
+    )
+  } else {
+    sidebarJobs.value = []
+    sidebarJobsLoading.value = false
+  }
+
+  await Promise.all(tasks)
+}
+
 async function loadPost() {
   try {
     await postStore.fetchPost(postId.value)
@@ -178,10 +358,26 @@ async function loadComments() {
 watch(
   postId,
   () => {
+    sidebarFetchSeq += 1
+    sidebarArticles.value = []
+    sidebarJobs.value = []
+    sidebarNewsError.value = ''
+    sidebarJobsError.value = ''
+    sidebarNewsLoading.value = false
+    sidebarJobsLoading.value = false
     loadPost()
     loadComments()
   },
   { immediate: true }
+)
+
+watch(
+  () => [loading.value, post.value?.id, postId.value],
+  () => {
+    if (loading.value) return
+    if (!post.value || String(post.value.id) !== String(postId.value)) return
+    loadSidebarByTags(post.value.tags, sidebarFetchSeq)
+  }
 )
 
 async function handleDeleteConfirm() {
@@ -260,6 +456,159 @@ async function deleteComment(id) {
 <style scoped>
 .post-detail-view {
   padding: var(--space-lg) var(--space-md);
+}
+
+.post-detail-layout {
+  display: grid;
+  gap: var(--space-xl);
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .post-detail-layout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+
+  .post-sidebar {
+    position: sticky;
+    top: var(--space-lg);
+  }
+}
+
+.post-sidebar {
+  padding: var(--space-lg);
+}
+
+.post-sidebar-title {
+  margin: 0 0 var(--space-xs);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-heading);
+}
+
+.post-sidebar-desc {
+  margin: 0 0 var(--space-lg);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.post-sidebar-query {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.post-sidebar-section {
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.post-sidebar-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.post-sidebar-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.post-sidebar-section-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-heading);
+}
+
+.post-sidebar-more {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.post-sidebar-more:hover {
+  text-decoration: underline;
+}
+
+.post-sidebar-hint,
+.post-sidebar-loading {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.post-sidebar-code {
+  font-size: 0.75rem;
+  padding: 0.1em 0.35em;
+  background: var(--color-gray-50);
+  border-radius: var(--radius-sm);
+}
+
+.post-sidebar-error {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-danger);
+  line-height: 1.4;
+}
+
+.post-sidebar-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.post-sidebar-item {
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.post-sidebar-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.post-sidebar-link {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--color-heading);
+  text-decoration: none;
+}
+
+.post-sidebar-link:hover {
+  color: var(--color-primary);
+}
+
+.post-sidebar-meta {
+  display: block;
+  margin-top: var(--space-xs);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.post-sidebar-job-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  line-height: 1.3;
+}
+
+.post-sidebar-job-desc {
+  margin: var(--space-xs) 0 var(--space-sm);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+.post-sidebar-apply {
+  margin-top: var(--space-xs);
 }
 
 .loading {

@@ -20,8 +20,8 @@
                                          MySQL Database
 
 外部 API (前端直接调用，不经过后端):
-  • JSearch (RapidAPI)  → src/api/jobs.js   — Jobs 页面职位搜索
-  • News API           → src/api/news.js   — News 页面头条 + 关键词检索
+  • JSearch (RapidAPI)  → src/api/jobs.js   — Jobs 页面职位搜索；帖子详情页侧栏按帖子 **tags** 自动联想职位（`searchJobs`，query 为「标签关键词 + jobs」）
+  • News API           → src/api/news.js   — News 页面头条 + 关键词检索；帖子详情页侧栏按帖子 **tags** 自动联想资讯（`newsApi.search`）
   • src/api/search.js  — 仅调用后端 /search/posts，搜索入口在 Posts 列表页（按标题/标签搜索，无独立 Search 页）
 ```
 
@@ -277,7 +277,7 @@ frontend/src/
 │   │   └── RegisterView.vue    # 注册页（含密码强度指示器、成功动画）
 │   ├── posts/
 │   │   ├── PostListView.vue   # 帖子列表（含标题/tag 搜索、整卡可点击进详情）
-│   │   ├── PostDetailView.vue # 帖子详情、评论树、楼中楼、编辑/删除
+│   │   ├── PostDetailView.vue # 帖子详情、侧栏(按 tag 拉 News+Jobs)、评论树、楼中楼、编辑/删除
 │   │   ├── PostCreateView.vue # 发帖（富文本 + 图片上传）
 │   │   ├── PostEditView.vue
 │   │   └── MyPostsView.vue   # 我的帖子（分页、删除确认弹窗）
@@ -301,6 +301,13 @@ frontend/src/
     ├── base.css            # 设计系统 + CSS 变量 (不要修改变量名)
     └── main.css            # 入口样式
 ```
+
+**帖子详情侧栏（`PostDetailView.vue`）：**
+
+- 帖子 **加载完成** 且路由 `id` 与当前 `currentPost` 一致后，若帖子有 **tags**，取 **最多 5 个** 标签名（trim 后）用空格拼成关键词，**并行**请求 News（`newsApi.search`，`pageSize: 5`）与 JSearch（`searchJobs`，`page: 1`，`num_pages: 1`），侧栏各展示最多 5 条；宽屏下侧栏 `sticky`，并提供链到 News / Jobs 整页的链接。
+- **无标签** 时不调用上述外部 API，侧栏提示可添加标签以查看相关内容。
+- 未配置 **`VITE_NEWS_API_KEY`** / **`VITE_JSEARCH_RAPIDAPI_KEY`** 时侧栏显示对应环境变量说明，不发起请求。
+- **切换帖子** 时递增序号，异步回调中比对序号，丢弃过期结果，避免侧栏与当前帖子错位。
 
 ### 3.2 Vue 组件编写规范
 

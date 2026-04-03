@@ -4,7 +4,7 @@ A web-based platform where job seekers can share interview experiences, job offe
 
 ## Main Features
 
-- **Posts** — Create, edit, delete posts with **rich text** (TipTap editor) and **local image uploads**; **search** by title + tag and pagination on the posts list page.
+- **Posts** — Create, edit, delete posts with **rich text** (TipTap editor) and **local image uploads**; **search** by title + tag and pagination on the posts list page. **Post detail** includes a **sidebar** that auto-fetches **related news** (News API) and **related jobs** (JSearch) using the post’s **tags** (up to five tag names as keywords) when the corresponding API keys are set in `.env`.
 - **Comments** — Nested replies on posts; delete cascades to child comments.
 - **My Posts** — List and manage your own posts with pagination; confirmation modal for delete.
 - **User profiles** — View profile and posts; edit your profile when logged in.
@@ -26,8 +26,8 @@ A web-based platform where job seekers can share interview experiences, job offe
 
 ## External APIs (called directly from frontend)
 
-- **JSearch API** (RapidAPI) — Job search used by the **Jobs** page (`/jobs`); base URL and API key in `.env`.
-- **News API** (https://newsapi.org/) — Used by the **News** page (`/news`) for top headlines and keyword search.
+- **JSearch API** (RapidAPI) — Job search on the **Jobs** page (`/jobs`) and **related jobs** on **post detail** when the post has tags; base URL and API key in `frontend/.env`.
+- **News API** (https://newsapi.org/) — Top headlines and keyword search on the **News** page (`/news`), and **related articles** on **post detail** when the post has tags.
 - Post search (title + tag) is on the **Posts** page (`/posts`), via backend `/api/search/posts`.
 
 ## Prerequisites
@@ -65,7 +65,8 @@ Make sure the following tools are installed on your machine:
 │       └── components/             # Reusable Components
 │
 ├── .gitignore
-└── README.md
+├── README.md
+└── DEVELOPMENT.md              # Conventions, folder map, and feature notes (e.g. post detail sidebar)
 ```
 
 ## Getting Started
@@ -142,10 +143,10 @@ Create `frontend/.env` (this file is gitignored; copy from a teammate or use the
 ```dotenv
 VITE_API_BASE_URL=http://localhost:8000/api
 
-# External APIs (called directly from frontend)
+# External APIs (News page, News + Jobs sidebar on post detail)
 VITE_NEWS_API_KEY=your_news_api_key
 
-# JSearch (Jobs page at /jobs)
+# JSearch (Jobs page + Jobs sidebar on post detail)
 VITE_JSEARCH_API_URL=https://jsearch.p.rapidapi.com
 VITE_JSEARCH_RAPIDAPI_KEY=your_rapidapi_key
 ```
@@ -161,7 +162,7 @@ npm run dev
 
 - Backend API: Open http://localhost:8000/api/posts — should return a JSON response.
 - API Documentation: Open http://localhost:8000/api/documentation — Swagger UI with all endpoints.
-- Frontend App: Open http://localhost:5173 — homepage, Posts (title/tag search), Jobs (`/jobs`), News (`/news`, requires API key).
+- Frontend App: Open http://localhost:5173 — homepage, Posts (title/tag search), open a **post with tags** to see the **related News / Jobs sidebar** (requires the same API keys as the News and Jobs pages).
 
 ## API Endpoints
 
@@ -184,8 +185,8 @@ npm run dev
 
 | Service   | Endpoint / usage | Description |
 | --------- | ---------------- | ----------- |
-| JSearch   | `VITE_JSEARCH_API_URL` + `/search` (query, page, country, date_posted) | Job search on the Jobs page |
-| News API  | `https://newsapi.org/v2/top-headlines`, `https://newsapi.org/v2/everything` | Top headlines and keyword search on the News page |
+| JSearch   | `VITE_JSEARCH_API_URL` + `/search` (query, page, country, date_posted) | Job search on the Jobs page; tag-based job suggestions on post detail |
+| News API  | `https://newsapi.org/v2/top-headlines`, `https://newsapi.org/v2/everything` | Top headlines and keyword search on the News page; tag-based articles on post detail (`/everything`) |
 
 ### Protected Routes (require Bearer Token)
 
