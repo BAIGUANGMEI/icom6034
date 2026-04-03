@@ -153,7 +153,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
   gap: var(--space-lg);
   padding-top: var(--space-sm);
   padding-bottom: var(--space-sm);
-  border: var(--border-width) solid var(--color-border);
+  border: none;
   border-radius: var(--radius-xl);
   background: rgba(255, 255, 255, 0.88);
   box-shadow: var(--shadow-soft);
@@ -221,13 +221,11 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
   transform: translateY(-2px);
   color: var(--color-heading);
   background: var(--color-primary-lighter);
-  border-color: var(--color-border);
 }
 
 .nav-item.active {
   color: var(--color-heading);
   background: var(--color-tertiary);
-  border-color: var(--color-border);
   box-shadow: var(--shadow-pop);
 }
 
@@ -252,7 +250,6 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  border: var(--border-width) solid var(--color-border);
   background: var(--color-quaternary);
   color: #fff;
   display: flex;
@@ -278,7 +275,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
   gap: 6px;
   cursor: pointer;
   padding: 6px 10px;
-  border: var(--border-width) solid var(--color-border);
+  border: none;
   border-radius: var(--radius-full);
   background: #fff;
 }
@@ -297,7 +294,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
   right: 0;
   width: 300px;
   background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
+  border: none;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-soft);
   padding: var(--space-sm) 0;
@@ -356,7 +353,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
   height: 46px;
   align-items: center;
   justify-content: center;
-  border: var(--border-width) solid var(--color-border);
+  border: none;
   border-radius: 50%;
   background: var(--color-secondary);
   color: #fff;
@@ -370,7 +367,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
   margin: var(--space-sm) auto 0;
   width: min(100%, calc(var(--content-max-width) - 32px));
   background: rgba(255, 255, 255, 0.96);
-  border: var(--border-width) solid var(--color-border);
+  border: none;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-soft);
   padding: var(--space-md);
@@ -393,7 +390,6 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
 .mobile-link:hover,
 .mobile-link.router-link-active {
   background: var(--color-tertiary);
-  border-color: var(--color-border);
   color: var(--color-heading);
 }
 
